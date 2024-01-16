@@ -17,6 +17,32 @@
 #include "fcntl.h"
 
 static int readcount = 0;
+static int tracecount = 0;
+static char tracefile[100];
+
+// String functions copied from ulib.c
+char*
+strcpy(char *s, const char *t)
+{
+  char *os;
+
+  os = s;
+  while((*s++ = *t++) != 0)
+    ;
+  return os;
+}
+
+int
+strcmp(const char *p, const char *q)
+{
+  while(*p && *p == *q)
+    p++, q++;
+  return (uchar)*p - (uchar)*q;
+}
+
+//// Copied string function end
+
+
 // Fetch the nth word-sized system call argument as a file descriptor
 // and return both the descriptor and the corresponding struct file.
 static int
@@ -294,7 +320,14 @@ sys_open(void)
 
   if(argstr(0, &path) < 0 || argint(1, &omode) < 0)
     return -1;
+  // trace count start
+  // cprintf("%s-%s-%d\n", tracefile, path, tracecount);
 
+  if (strcmp(path, tracefile) == 0) {tracecount++;}
+
+  // cprintf("%s-%s-%d\n", tracefile, path, tracecount);
+
+  // trace count end
   begin_op();
 
   if(omode & O_CREATE){
@@ -376,7 +409,7 @@ sys_chdir(void)
   char *path;
   struct inode *ip;
   struct proc *curproc = myproc();
-  
+
   begin_op();
   if(argstr(0, &path) < 0 || (ip = namei(path)) == 0){
     end_op();
@@ -448,4 +481,21 @@ sys_pipe(void)
 int
 sys_getreadcount(void) {
   return readcount;
+}
+
+int
+sys_trace() {
+  char *path;
+
+  if (argstr(0, &path) < 0) {
+    return -1;
+  }
+  strcpy(tracefile, path);
+  // cprintf("%s-%s-%d\n", tracefile, path, tracecount);
+  return 1;
+}
+
+int
+sys_gettracecount(void) {
+  return tracecount;
 }

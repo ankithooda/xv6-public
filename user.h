@@ -24,7 +24,8 @@ char* sbrk(int);
 int sleep(int);
 int uptime(void);
 int getreadcount(void);
-
+int trace(const char*);
+int gettracecount();
 // ulib.c
 int stat(const char*, struct stat*);
 char* strcpy(char*, const char*);
