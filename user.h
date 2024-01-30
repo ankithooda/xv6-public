@@ -26,6 +26,7 @@ int uptime(void);
 int getreadcount(void);
 int trace(const char*);
 int gettracecount();
+int alarm(int ticks, void (*handler)());
 // ulib.c
 int stat(const char*, struct stat*);
 char* strcpy(char*, const char*);

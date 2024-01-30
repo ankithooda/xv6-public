@@ -23,3 +23,4 @@
 #define SYS_getreadcount 22
 #define SYS_trace  23
 #define SYS_gettracecount 24
+#define SYS_alarm 25
