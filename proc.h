@@ -52,6 +52,7 @@ struct proc {
   uint current_ticks;          // Current ticks since the last alarm
   uint alarmticks;             // Period of alarm in ticks (see alarm syscall)
   void *alarmhandler;          // Alarm handler
+  uint tickets;                // Lottery Tickets
 };
 
 // Process memory is laid out contiguously, low addresses first:
