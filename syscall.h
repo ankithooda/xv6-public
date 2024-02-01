@@ -24,3 +24,4 @@
 #define SYS_trace  23
 #define SYS_gettracecount 24
 #define SYS_alarm 25
+#define SYS_settickets 26

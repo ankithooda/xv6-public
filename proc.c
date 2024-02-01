@@ -6,6 +6,7 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
+#include "random.h"
 
 struct {
   struct spinlock lock;
@@ -328,17 +329,30 @@ scheduler(void)
   struct proc *p;
   struct cpu *c = mycpu();
   c->proc = 0;
+  uint total_tickets = 0;
   
   for(;;){
     // Enable interrupts on this processor.
     sti();
+    total_tickets = 0;
 
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
+
+    // We loop over process table to get total number of tickets.
+    // There can be max 64 processes and it should be quick to loop over them
+    // Alternative would be to maintain the ticket sum and update it
+    // when new processes are created or killed or on the call of settickets syscall.
+    for (p = ptable.proc; p < &ptable.proc[NPROC]; p++ {
+      if (p->state != RUNNABLE)
+        continue;
+      total_tickets += p->tickets;
+    }
+
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)
         continue;
-      cprintf("\n#### SCHEDULER %s ####\n", p->name);
+      cprintf("\n#### SCHEDULER %s-%d-%d####\n", p->name, p->tickets, random_uint(100));
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
