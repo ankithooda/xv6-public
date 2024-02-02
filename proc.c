@@ -329,12 +329,16 @@ scheduler(void)
   struct proc *p;
   struct cpu *c = mycpu();
   c->proc = 0;
-  uint total_tickets = 0;
-  
+
+  uint total_tickets;
+  uint random_ticket;
+  uint ticket_counter;
+
   for(;;){
     // Enable interrupts on this processor.
     sti();
     total_tickets = 0;
+    ticket_counter = 0;
 
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
@@ -343,16 +347,31 @@ scheduler(void)
     // There can be max 64 processes and it should be quick to loop over them
     // Alternative would be to maintain the ticket sum and update it
     // when new processes are created or killed or on the call of settickets syscall.
-    for (p = ptable.proc; p < &ptable.proc[NPROC]; p++ {
-      if (p->state != RUNNABLE)
+    for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+      if (p->state != RUNNABLE) {
         continue;
+      }
       total_tickets += p->tickets;
     }
 
+    if (total_tickets < 2) {
+      random_ticket = 1;
+    } else {
+      random_ticket = random_uint(total_tickets);
+    }
+
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->state != RUNNABLE)
+      if(p->state != RUNNABLE) {
         continue;
-      cprintf("\n#### SCHEDULER %s-%d-%d####\n", p->name, p->tickets, random_uint(100));
+      }
+
+      // Lottery scheduler
+      ticket_counter = ticket_counter + p->tickets;
+      cprintf("\n#### SCHEDULER %s-%d-%d-%d-%d####\n", p->name, p->tickets, total_tickets, ticket_counter, random_ticket);
+      // Skip loop if this process is not eligible for scheduling
+      if (ticket_counter < random_ticket)
+        continue;
+
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
