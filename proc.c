@@ -7,10 +7,12 @@
 #include "proc.h"
 #include "spinlock.h"
 #include "random.h"
+#include "pstat.h"
 
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
+  struct pstat stat;
 } ptable;
 
 static struct proc *initproc;
@@ -347,7 +349,19 @@ scheduler(void)
     // There can be max 64 processes and it should be quick to loop over them
     // Alternative would be to maintain the ticket sum and update it
     // when new processes are created or killed or on the call of settickets syscall.
-    for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+    for (int i = 0; i < NPROC; i++) {
+      p = &ptable.proc[i];
+
+      // Update pstat
+      if (p->state == UNUSED) {
+        ptable.stat.inuse[i] = 0;
+        ptable.stat.ticks[i] = 0;
+      } else {
+        ptable.stat.pid[i] = p->pid;
+        ptable.stat.tickets[i] = p->tickets;
+        ptable.stat.inuse[i] = 1;
+      }
+      // Update total_tickets for the scheduler
       if (p->state != RUNNABLE) {
         continue;
       }
