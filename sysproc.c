@@ -116,3 +116,8 @@ sys_settickets(void)
   myproc()->tickets = tickets;
   return 0;
 }
+
+int sys_getpinfo()
+{
+
+}
