@@ -50,10 +50,10 @@ trap(struct trapframe *tf)
   case T_IRQ0 + IRQ_TIMER:
     if(cpuid() == 0){
       if (myproc() != 0) {
-        cprintf("\n######### Process TIMER TRAP %s ########\n", myproc()->name);
+        // cprintf("\n######### Process TIMER TRAP %s ########\n", myproc()->name);
         if (myproc()->alarmhandler != 0) {
           myproc()->current_ticks = myproc()->current_ticks + ticks;
-          cprintf("\n######## Process TIMER TICKS %d ########\n", myproc()->current_ticks);
+          // cprintf("\n######## Process TIMER TICKS %d ########\n", myproc()->current_ticks);
           if (myproc()->current_ticks >= myproc()->alarmticks) {
             // (myproc()->alarmhandler)();
           }

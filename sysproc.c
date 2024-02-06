@@ -119,5 +119,12 @@ sys_settickets(void)
 
 int sys_getpinfo()
 {
+  struct pstat *p;
 
+  if (argptr(0, (char **)&p, sizeof(struct pstat *)) < 0) {
+    return -1;
+  }
+  copypinfo(p);
+  cprintf("\nIn getpinfo %d\n", p);
+  return 0;
 }

@@ -186,6 +186,7 @@ UPROGS=\
     _test_trace\
 	_alarmtest\
 	_loopa\
+    _test_sched\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)

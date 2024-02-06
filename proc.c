@@ -41,10 +41,10 @@ struct cpu*
 mycpu(void)
 {
   int apicid, i;
-  
+
   if(readeflags()&FL_IF)
     panic("mycpu called with interrupts enabled\n");
-  
+
   apicid = lapicid();
   // APIC IDs are not guaranteed to be contiguous. Maybe we should have
   // a reverse map, or reserve a register to store &cpus[i].
@@ -374,14 +374,17 @@ scheduler(void)
       random_ticket = random_uint(total_tickets);
     }
 
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    for (int i = 0; i < NPROC; i++) {
+      p = &ptable.proc[i];
+
+      // for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE) {
         continue;
       }
 
       // Lottery scheduler
       ticket_counter = ticket_counter + p->tickets;
-      cprintf("\n#### SCHEDULER %s-%d-%d-%d-%d####\n", p->name, p->tickets, total_tickets, ticket_counter, random_ticket);
+      // cprintf("\n#### SCHEDULER %s-%d-%d-%d-%d####\n", p->name, p->tickets, total_tickets, ticket_counter, random_ticket);
       // Skip loop if this process is not eligible for scheduling
       if (ticket_counter < random_ticket)
         continue;
@@ -399,6 +402,9 @@ scheduler(void)
       // Process is done running for now.
       // It should have changed its p->state before coming back.
       c->proc = 0;
+
+      // After process has run increment it's ticks in pstat struct
+      ptable.stat.ticks[i]++;
     }
     release(&ptable.lock);
 
@@ -580,5 +586,15 @@ procdump(void)
         cprintf(" %p", pc[i]);
     }
     cprintf("\n");
+  }
+}
+
+void copypinfo(struct pstat *dest)
+{
+  for (int i = 0; i < NPROC; i++) {
+    dest->inuse[i] = ptable.stat.inuse[i];
+    dest->pid[i] = ptable.stat.pid[i];
+    dest->tickets[i] = ptable.stat.tickets[i];
+    dest->ticks[i] = ptable.stat.ticks[i];
   }
 }
