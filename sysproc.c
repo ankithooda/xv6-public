@@ -125,6 +125,5 @@ int sys_getpinfo()
     return -1;
   }
   copypinfo(p);
-  cprintf("\nIn getpinfo %d\n", p);
   return 0;
 }

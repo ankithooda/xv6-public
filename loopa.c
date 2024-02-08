@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
       printf(1, "Error in spawning grandchild\n");
     }
   } else if (cpid < 0) {
-    printf(1, "Error in spawning grandchild\n");
+    printf(1, "Error in spawning child\n");
   }
 
   for (;;) {;}

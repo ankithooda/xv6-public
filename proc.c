@@ -368,12 +368,14 @@ scheduler(void)
       total_tickets += p->tickets;
     }
 
+    // Generate Random ticket
     if (total_tickets < 2) {
       random_ticket = 1;
     } else {
       random_ticket = random_uint(total_tickets);
     }
 
+    // Loop over process table to see which RUNNABLE process won the lottery.
     for (int i = 0; i < NPROC; i++) {
       p = &ptable.proc[i];
 
@@ -384,30 +386,31 @@ scheduler(void)
 
       // Lottery scheduler
       ticket_counter = ticket_counter + p->tickets;
-      // cprintf("\n#### SCHEDULER %s-%d-%d-%d-%d####\n", p->name, p->tickets, total_tickets, ticket_counter, random_ticket);
+      cprintf("\n#### SCHEDULER %s-%d-%d-%d-%d####\n", p->name, p->tickets, total_tickets, ticket_counter, random_ticket);
       // Skip loop if this process is not eligible for scheduling
-      if (ticket_counter < random_ticket)
-        continue;
-
-      // Switch to chosen process.  It is the process's job
-      // to release ptable.lock and then reacquire it
-      // before jumping back to us.
-      c->proc = p;
-      switchuvm(p);
-      p->state = RUNNING;
-
-      swtch(&(c->scheduler), p->context);
-      switchkvm();
-
-      // Process is done running for now.
-      // It should have changed its p->state before coming back.
-      c->proc = 0;
-
-      // After process has run increment it's ticks in pstat struct
-      ptable.stat.ticks[i]++;
+      if (random_ticket < ticket_counter) {
+        // We increment the ticks of the selected process.
+        ptable.stat.ticks[i]++;
+        break;
+      }
     }
-    release(&ptable.lock);
+    cprintf("\n#### SELECTED PROCESS %s-%d####\n", p->name, p->tickets);
 
+    // Switch to chosen process.  It is the process's job
+    // to release ptable.lock and then reacquire it
+    // before jumping back to us.
+    c->proc = p;
+    switchuvm(p);
+    p->state = RUNNING;
+
+    swtch(&(c->scheduler), p->context);
+    switchkvm();
+
+    // Process is done running for now.
+    // It should have changed its p->state before coming back.
+    c->proc = 0;
+
+    release(&ptable.lock);
   }
 }
 
