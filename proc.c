@@ -386,29 +386,31 @@ scheduler(void)
 
       // Lottery scheduler
       ticket_counter = ticket_counter + p->tickets;
-      cprintf("\n#### SCHEDULER %s-%d-%d-%d-%d####\n", p->name, p->tickets, total_tickets, ticket_counter, random_ticket);
+      // cprintf("\n#### SCHEDULER %s-%d-%d-%d-%d####\n", p->name, p->tickets, total_tickets, ticket_counter, random_ticket);
       // Skip loop if this process is not eligible for scheduling
-      if (random_ticket < ticket_counter) {
+      if (random_ticket <= ticket_counter) {
         // We increment the ticks of the selected process.
         ptable.stat.ticks[i]++;
         break;
       }
     }
-    cprintf("\n#### SELECTED PROCESS %s-%d####\n", p->name, p->tickets);
+    // cprintf("\n#### SELECTED PROCESS %s-%d####\n", p->name, p->tickets);
 
     // Switch to chosen process.  It is the process's job
     // to release ptable.lock and then reacquire it
     // before jumping back to us.
-    c->proc = p;
-    switchuvm(p);
-    p->state = RUNNING;
+    if (p->state == RUNNABLE) {
+      c->proc = p;
+      switchuvm(p);
+      p->state = RUNNING;
 
-    swtch(&(c->scheduler), p->context);
-    switchkvm();
+      swtch(&(c->scheduler), p->context);
+      switchkvm();
 
-    // Process is done running for now.
-    // It should have changed its p->state before coming back.
-    c->proc = 0;
+      // Process is done running for now.
+      // It should have changed its p->state before coming back.
+      c->proc = 0;
+    }
 
     release(&ptable.lock);
   }
