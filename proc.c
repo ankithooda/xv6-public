@@ -386,15 +386,14 @@ scheduler(void)
 
       // Lottery scheduler
       ticket_counter = ticket_counter + p->tickets;
-      // cprintf("\n#### SCHEDULER %s-%d-%d-%d-%d####\n", p->name, p->tickets, total_tickets, ticket_counter, random_ticket);
-      // Skip loop if this process is not eligible for scheduling
+
+      // Increment ticket counter
       if (random_ticket <= ticket_counter) {
         // We increment the ticks of the selected process.
         ptable.stat.ticks[i]++;
         break;
       }
     }
-    // cprintf("\n#### SELECTED PROCESS %s-%d####\n", p->name, p->tickets);
 
     // Switch to chosen process.  It is the process's job
     // to release ptable.lock and then reacquire it
@@ -596,6 +595,7 @@ procdump(void)
 
 void copypinfo(struct pstat *dest)
 {
+  // cprintf("Address in kernel %d\n", dest);
   for (int i = 0; i < NPROC; i++) {
     dest->inuse[i] = ptable.stat.inuse[i];
     dest->pid[i] = ptable.stat.pid[i];
