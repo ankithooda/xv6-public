@@ -8,8 +8,10 @@ int
 main(int argc, char *argv[])
 {
   struct pstat p;
-  // printf(1, "Address in userspace %d\n", &p);
+  printf(1, "Address in userspace %d\n", &p);
+
   getpinfo(&p);
+
   printf(1, "PID\tTICKETS\tTICKS\n");
   for (int i = 0; i < NPROC; i++) {
     if (p.inuse[i] == 1) {

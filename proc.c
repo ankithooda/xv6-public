@@ -379,7 +379,6 @@ scheduler(void)
     for (int i = 0; i < NPROC; i++) {
       p = &ptable.proc[i];
 
-      // for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE) {
         continue;
       }
@@ -595,11 +594,12 @@ procdump(void)
 
 void copypinfo(struct pstat *dest)
 {
-  // cprintf("Address in kernel %d\n", dest);
+  cprintf("Address in kernel %d\n", dest);
   for (int i = 0; i < NPROC; i++) {
     dest->inuse[i] = ptable.stat.inuse[i];
     dest->pid[i] = ptable.stat.pid[i];
     dest->tickets[i] = ptable.stat.tickets[i];
     dest->ticks[i] = ptable.stat.ticks[i];
   }
+  cprintf("Done.\n");
 }
