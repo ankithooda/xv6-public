@@ -38,8 +38,13 @@ exec(char *path, char **argv)
   if((pgdir = setupkvm()) == 0)
     goto bad;
 
-  // Load program into memory.
   sz = 0;
+  // Allocate guard page at 0 address and clear it's PTEs
+  if((sz = allocuvm(pgdir, sz, sz + 1*PGSIZE)) == 0)
+    goto bad;
+  clearpteu(pgdir, 0);
+
+  // Load program into kernel memory.
   for(i=0, off=elf.phoff; i<elf.phnum; i++, off+=sizeof(ph)){
     if(readi(ip, (char*)&ph, off, sizeof(ph)) != sizeof(ph))
       goto bad;
