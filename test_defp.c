@@ -4,8 +4,20 @@
 
 int main(int argc , char **argv) {
 
-  int *c = (int *)0x0;
+  int rc = fork();
 
-  printf(1, "%d\n", *c);
-  exit();
+  if (rc == 0) {
+    // child
+    int *c = (int *)0x0;
+    printf(1, "%d\n", *c);
+
+    printf(1, "Child Process\n");
+    exit();
+  } else if (rc < 0) {
+    printf(1, "Error in fork\n");
+  } else {
+    wait();
+    printf(1, "Parent Process\n");
+    exit();
+  }
 }
