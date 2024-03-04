@@ -188,6 +188,7 @@ UPROGS=\
 	_loopa\
     _test_sched\
 	_test_defp\
+	_test_mem\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)
