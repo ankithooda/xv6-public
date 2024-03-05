@@ -7,8 +7,11 @@
 int
 main(int argc, char *argv[])
 {
-  int *addr = 0x0;
-  *addr = 1234;
-  //printf(1, "%d\n", *addr);
+  uint *addr;
+  addr = malloc(50);
+  *(addr + 0) = 1234;
+  *(addr + 49) = 9870;
+  printf(1, "%d\n", *(addr + 0));
+  printf(1, "%d\n", *(addr + 49));
   exit();
 }

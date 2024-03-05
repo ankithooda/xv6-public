@@ -15,6 +15,8 @@ extern uint vectors[];  // in vectors.S: array of 256 entry pointers
 struct spinlock tickslock;
 uint ticks;
 
+int mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm);
+
 void
 tvinit(void)
 {
@@ -83,11 +85,35 @@ trap(struct trapframe *tf)
   default:
     if(myproc() == 0 || (tf->cs&3) == 0){
       // In kernel, it must be our mistake.
-      cprintf("unexpected trap %d from cpu %d eip %x (cr2=0x%x)\n",
-              tf->trapno, cpuid(), tf->eip, rcr2());
+      cprintf("unexpected trap %d err %d from cpu %d eip %x (cr2=0x%x)\n",
+              tf->trapno, tf->err, cpuid(), tf->eip, rcr2());
       panic("trap");
     }
-    // In user space, assume process misbehaved.
+
+    // Allocate page
+
+    if (tf->trapno == 14 && (tf->err == 4 || tf->err == 6)) {
+      char *pa;
+
+      // Virtual address which caused the Pagefault
+      //uint va = rcr2();
+
+      cprintf("----%d----\n", PGROUNDDOWN(rcr2()));
+      pa = kalloc();
+      if(pa == 0){
+        cprintf("allocuvm out of memory\n");
+        goto kill_process;
+      }
+      memset(pa, 0, PGSIZE);
+      if(mappages(myproc()->pgdir, (char*)rcr2(), PGSIZE, V2P(pa), PTE_W|PTE_U) < 0){
+        cprintf("allocuvm out of memory (2)\n");
+        kfree(pa);
+        goto kill_process;
+      }
+      cprintf("Did we reach here\n");
+      break;
+    }
+  kill_process:
     cprintf("pid %d %s: trap %d err %d on cpu %d "
             "eip 0x%x addr 0x%x--kill proc\n",
             myproc()->pid, myproc()->name, tf->trapno,
