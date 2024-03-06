@@ -91,7 +91,7 @@ trap(struct trapframe *tf)
     }
 
     // Allocate page
-
+/*
     if (tf->trapno == 14 && (tf->err == 4 || tf->err == 6)) {
       char *pa;
 
@@ -112,7 +112,12 @@ trap(struct trapframe *tf)
       }
       cprintf("Did we reach here\n");
       break;
+    } else {
+      goto kill_process;
     }
+*/
+    goto kill_process;
+
   kill_process:
     cprintf("pid %d %s: trap %d err %d on cpu %d "
             "eip 0x%x addr 0x%x--kill proc\n",
