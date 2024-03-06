@@ -91,8 +91,8 @@ trap(struct trapframe *tf)
     }
 
     // Allocate page
-/*
-    if (tf->trapno == 14 && (tf->err == 4 || tf->err == 6)) {
+
+    if (tf->trapno == 14 && (tf->err == 4 || tf->err == 6) && rcr2() < myproc()->sz) {
       char *pa;
 
       // Virtual address which caused the Pagefault
@@ -105,7 +105,7 @@ trap(struct trapframe *tf)
         goto kill_process;
       }
       memset(pa, 0, PGSIZE);
-      if(mappages(myproc()->pgdir, (char*)rcr2(), PGSIZE, V2P(pa), PTE_W|PTE_U) < 0){
+      if(mappages(myproc()->pgdir, (char*)PGROUNDDOWN(rcr2()), PGSIZE, V2P(pa), PTE_W|PTE_U) < 0){
         cprintf("allocuvm out of memory (2)\n");
         kfree(pa);
         goto kill_process;
@@ -115,8 +115,8 @@ trap(struct trapframe *tf)
     } else {
       goto kill_process;
     }
-*/
-    goto kill_process;
+
+    //goto kill_process;
 
   kill_process:
     cprintf("pid %d %s: trap %d err %d on cpu %d "

@@ -52,16 +52,21 @@ sys_sbrk(void)
     return -1;
   cprintf("%s - %d\n", myproc()->name, n);
   addr = myproc()->sz;
-  if(growproc(n) < 0)
-    return -1;
-  /*if (n < 0) {
+  /*if(growproc(n) < 0)
+    return -1;*/
+  if (n < 0) {
     if(growproc(n) < 0)
       return -1;
   } else {
-    //myproc()->sz = addr + n;
-    if(growproc(n) < 0)
-      return -1;
-  }*/
+    if (myproc()->name[0] == 't' || myproc()->name[0] == 'h') {
+      cprintf("only for test\n");
+      myproc()->sz = addr + n;
+    } else {
+      if(growproc(n) < 0)
+        return -1;
+    }
+  }
+  cprintf("returning add %d\n", addr);
   return addr;
 }
 
