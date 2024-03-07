@@ -83,40 +83,42 @@ trap(struct trapframe *tf)
 
   //PAGEBREAK: 13
   default:
-    if(myproc() == 0 || (tf->cs&3) == 0){
-      // In kernel, it must be our mistake.
-      cprintf("unexpected trap %d err %d from cpu %d eip %x (cr2=0x%x)\n",
-              tf->trapno, tf->err, cpuid(), tf->eip, rcr2());
-      panic("trap");
-    }
+    // myproc() is zero there is some problem in kernel
+    // because init process is always running.
+    if (myproc() == 0)
+      goto kernel_panic;
 
-    // Allocate page
+    // Kernel mode
+    // if pagefault with read/write error code; allocate page
+    // otherwise kernel panic
+    else if ((tf->cs&3) == 0)
+      if (tf->trapno == T_PGFLT && (tf->err == 0 || tf->err == 2))
+        goto allocate_page;
+      else
+        goto kernel_panic;
 
-    if (tf->trapno == 14 && (tf->err == 4 || tf->err == 6) && rcr2() < myproc()->sz) {
-      char *pa;
-
-      // Virtual address which caused the Pagefault
-      //uint va = rcr2();
-
-      cprintf("----%d----\n", PGROUNDDOWN(rcr2()));
-      pa = kalloc();
-      if(pa == 0){
-        cprintf("allocuvm out of memory\n");
+    // User mode
+    // If pagefault with read/write error code; allocate page
+    // otherwise kill user process
+    else
+      if (tf->trapno == T_PGFLT && (tf->err == 4 || tf->err == 6))
+        goto allocate_page;
+      else
         goto kill_process;
-      }
-      memset(pa, 0, PGSIZE);
-      if(mappages(myproc()->pgdir, (char*)PGROUNDDOWN(rcr2()), PGSIZE, V2P(pa), PTE_W|PTE_U) < 0){
-        cprintf("allocuvm out of memory (2)\n");
-        kfree(pa);
-        goto kill_process;
-      }
-      cprintf("Did we reach here\n");
-      break;
-    } else {
+
+  allocate_page:
+    char *pa = kalloc();
+    if(pa == 0){
+      cprintf("allocuvm out of memory\n");
       goto kill_process;
     }
-
-    //goto kill_process;
+    memset(pa, 0, PGSIZE);
+    if(mappages(myproc()->pgdir, (char*)PGROUNDDOWN(rcr2()), PGSIZE, V2P(pa), PTE_W|PTE_U) < 0){
+      cprintf("allocuvm out of memory (2)\n");
+      kfree(pa);
+      goto kill_process;
+    }
+    break;
 
   kill_process:
     cprintf("pid %d %s: trap %d err %d on cpu %d "
@@ -124,6 +126,12 @@ trap(struct trapframe *tf)
             myproc()->pid, myproc()->name, tf->trapno,
             tf->err, cpuid(), tf->eip, rcr2());
     myproc()->killed = 1;
+    break;
+  kernel_panic:
+    cprintf("unexpected trap %d err %d from cpu %d eip %x (cr2=0x%x)\n",
+              tf->trapno, tf->err, cpuid(), tf->eip, rcr2());
+    panic("trap");
+    break;
   }
 
   // Force process exit if it has been killed and is in user space.

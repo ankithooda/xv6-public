@@ -52,21 +52,17 @@ sys_sbrk(void)
     return -1;
   cprintf("%s - %d\n", myproc()->name, n);
   addr = myproc()->sz;
-  /*if(growproc(n) < 0)
-    return -1;*/
+
+  // For negative arguments to sbrk (reducing process size)
+  // do it immediately.
+  // For positive arguments to sbrk (increasing process size)
+  // do it lazily and actually allocate memory in trap.c
   if (n < 0) {
     if(growproc(n) < 0)
       return -1;
   } else {
-    if (myproc()->name[0] == 't' || myproc()->name[0] == 'h') {
-      cprintf("only for test\n");
       myproc()->sz = addr + n;
-    } else {
-      if(growproc(n) < 0)
-        return -1;
-    }
   }
-  cprintf("returning add %d\n", addr);
   return addr;
 }
 

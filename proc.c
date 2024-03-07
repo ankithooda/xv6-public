@@ -594,7 +594,7 @@ procdump(void)
 
 void copypinfo(struct pstat *dest)
 {
-  cprintf("Address in kernel %p\n", dest);
+  cprintf("Address in kernel %d\n", dest);
   for (int i = 0; i < NPROC; i++) {
     dest->inuse[i] = ptable.stat.inuse[i];
     dest->pid[i] = ptable.stat.pid[i];
