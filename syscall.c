@@ -107,8 +107,9 @@ extern int sys_getreadcount(void);
 extern int sys_trace(void);
 extern int sys_gettracecount(void);
 extern int sys_alarm(void);
-extern int sys_settickets();
-extern int sys_getpinfo();
+extern int sys_settickets(void);
+extern int sys_getpinfo(void);
+extern int sys_dumppagetable(void);
 
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -138,6 +139,7 @@ static int (*syscalls[])(void) = {
 [SYS_alarm]   sys_alarm,
 [SYS_settickets] sys_settickets,
 [SYS_getpinfo] sys_getpinfo,
+[SYS_dumppagetable] sys_dumppagetable,
 };
 
 void

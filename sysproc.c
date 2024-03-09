@@ -137,3 +137,13 @@ int sys_getpinfo()
   copypinfo(p);
   return 0;
 }
+
+int sys_dumppagetable() {
+  int pid;
+
+  if (argint(0, &pid) < 0)
+    return -1;
+
+  cprintf("Printing page tables\n");
+  return 0;
+}

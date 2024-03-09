@@ -30,6 +30,7 @@ int gettracecount();
 int alarm(int ticks, void (*handler)());
 int settickets(int tickets);
 int getpinfo(struct pstat*);
+int dumppagetable(int pid);
 // ulib.c
 int stat(const char*, struct stat*);
 char* strcpy(char*, const char*);
