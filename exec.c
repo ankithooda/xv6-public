@@ -43,6 +43,7 @@ exec(char *path, char **argv)
   if((sz = allocuvm(pgdir, sz, sz + 1*PGSIZE)) == 0)
     goto bad;
   clearpteu(pgdir, 0);
+  cprintf("zero guard page %d\n", sz);
 
   // Load program into kernel memory.
   for(i=0, off=elf.phoff; i<elf.phnum; i++, off+=sizeof(ph)){
@@ -64,6 +65,7 @@ exec(char *path, char **argv)
   iunlockput(ip);
   end_op();
   ip = 0;
+  cprintf("program end %d\n", sz);
 
   // Allocate two pages at the next page boundary.
   // Make the first inaccessible.  Use the second as the user stack.
@@ -72,6 +74,7 @@ exec(char *path, char **argv)
     goto bad;
   clearpteu(pgdir, (char*)(sz - 2*PGSIZE));
   sp = sz;
+  cprintf("stack pointer %d\n", sz);
 
   // Push argument strings, prepare rest of stack in ustack.
   for(argc = 0; argv[argc]; argc++) {

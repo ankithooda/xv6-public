@@ -189,6 +189,7 @@ UPROGS=\
     _test_sched\
 	_test_defp\
 	_test_mem\
+	_test_dumppt\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)

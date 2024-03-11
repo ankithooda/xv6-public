@@ -15,12 +15,12 @@ main(int argc, char *argv[])
   printf(1, "%d\n", *(addr + 49));
   free(addr);
   */
-  struct pstat *p;
+  /*struct pstat *p;
   p = malloc(1000 * sizeof(struct pstat));
 
-  for (int i = 0; i < 1000; i++) {
+  for (int i = 0; i < 5; i++) {
     getpinfo(p+i);
-  }
+    }*/
 
 
   /*printf(1, "PID\tTICKETS\tTICKS\n");
@@ -29,7 +29,11 @@ main(int argc, char *argv[])
       printf(1, "%d\t%d\t%d\n", p->pid[i], p->tickets[i], p->ticks[i]);
     }
     }*/
-  free(p);
+  //free(p);
+
+  struct pstat *add = (struct pstat*)8200;
+  getpinfo(add);
+  //printf(1, "%d\n", *add);
 
   exit();
 }
