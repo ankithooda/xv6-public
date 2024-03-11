@@ -122,6 +122,7 @@ int             wait(void);
 void            wakeup(void*);
 void            yield(void);
 void            copypinfo(struct pstat*);
+void            dumppgtab(int pid);
 
 // swtch.S
 void            swtch(struct context**, struct context*);

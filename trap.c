@@ -89,7 +89,7 @@ trap(struct trapframe *tf)
       goto kernel_panic;
 
     // Kernel mode
-    // if pagefault with read/write error code; allocate page
+    // if pagefault with read/write error code on unmapped memory; allocate page
     // otherwise kernel panic
     else if ((tf->cs&3) == 0)
       if (tf->trapno == T_PGFLT && (tf->err == 0 || tf->err == 2))
@@ -98,7 +98,7 @@ trap(struct trapframe *tf)
         goto kernel_panic;
 
     // User mode
-    // If pagefault with read/write error code; allocate page
+    // If pagefault with read/write error code on unmapped memory; allocate page
     // otherwise kill user process
     else
       if (tf->trapno == T_PGFLT && (tf->err == 4 || tf->err == 6))

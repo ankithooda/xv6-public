@@ -22,7 +22,8 @@ extern void forkret(void);
 extern void trapret(void);
 
 static void wakeup1(void *chan);
-
+pte_t * walkpgdir(pde_t *pgdir, const void *va, int alloc);
+void dumppgtab(int pid);
 void
 pinit(void)
 {
@@ -602,4 +603,44 @@ void copypinfo(struct pstat *dest)
     dest->ticks[i] = ptable.stat.ticks[i];
   }
   cprintf("Done.\n");
+}
+
+void dumppgtab(int pid) {
+  // First we need to find the proc
+  unsigned int selected = -1;
+  pde_t *p;
+  for (int i = 0; i < NPROC; i++) {
+    if (ptable.proc[i].pid == pid) {
+      selected = i;
+      break;
+    }
+  }
+  if (selected != -1) {
+    cprintf("START PAGE TABLE pid (%d)\n", ptable.proc[selected].pid);
+    for (int i = 0; i <= ptable.proc[selected].sz; i=i+PGSIZE) {
+      p = walkpgdir(ptable.proc[selected].pgdir, (const void *)i, 0);
+
+      if (p == 0)
+        return;
+
+      cprintf("%d ", i);
+      if ((uint)*p&PTE_P)
+        cprintf("P ");
+      else
+        cprintf("- ");
+
+      if ((uint)*p&PTE_U)
+        cprintf("U ");
+      else
+        cprintf("- ");
+
+      if ((uint)*p&PTE_W)
+        cprintf("W ");
+      else
+        cprintf("- ");
+
+      cprintf("%p\n", PTE_ADDR(*p));
+      cprintf("END PAGE TABLE\n");
+    }
+  }
 }
