@@ -640,7 +640,7 @@ void dumppgtab(int pid) {
         cprintf("- ");
 
       cprintf("%p\n", PTE_ADDR(*p));
-      cprintf("END PAGE TABLE\n");
     }
+    cprintf("END PAGE TABLE\n");
   }
 }

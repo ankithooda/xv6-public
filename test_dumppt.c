@@ -1,7 +1,6 @@
 #include "types.h"
 #include "user.h"
-
-
+#include "pstat.h"
 
 int main(int argc, char *argv[])
 {
@@ -12,5 +11,10 @@ int main(int argc, char *argv[])
         pid = getpid();
     }
     dumppagetable(pid);
+    struct pstat *p = malloc(sizeof(struct pstat));
+    getpinfo(p);
+    dumppagetable(pid);
+    getpagetableentry(pid, 0x1000);
+    isphysicalpagefree(0x1000);
     exit();
 }

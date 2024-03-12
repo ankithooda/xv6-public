@@ -147,3 +147,11 @@ int sys_dumppagetable() {
     dumppgtab(pid);
   return 0;
 }
+
+int sys_getpagetableentry() {
+  return 0;
+}
+
+int sys_isphysicalpagefree() {
+  return 0;
+}
