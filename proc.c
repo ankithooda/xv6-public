@@ -644,3 +644,25 @@ void dumppgtab(int pid) {
     cprintf("END PAGE TABLE\n");
   }
 }
+
+int getpte(int pid, int addr) {
+  // First we need to find the proc
+  unsigned int selected = -1;
+  pte_t *p;
+  for (int i = 0; i < NPROC; i++) {
+    if (ptable.proc[i].pid == pid) {
+      selected = i;
+      break;
+    }
+  }
+  if (selected != -1) {
+    p = walkpgdir(ptable.proc[selected].pgdir, (const void *)addr, 0);
+    return (int)*p;
+    /*if (p == 0)
+      return 0;
+    else
+    return (int)*p;*/
+  } else {
+    return 0;
+  }
+}

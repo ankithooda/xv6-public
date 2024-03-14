@@ -149,7 +149,13 @@ int sys_dumppagetable() {
 }
 
 int sys_getpagetableentry() {
-  return 0;
+  int pid, addr;
+
+  if (argint(0, &pid) < 0 || argint(1, &addr) < 0) {
+    return 0;
+  } else {
+    return getpte(pid, addr);
+  }
 }
 
 int sys_isphysicalpagefree() {

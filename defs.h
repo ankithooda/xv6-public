@@ -123,6 +123,7 @@ void            wakeup(void*);
 void            yield(void);
 void            copypinfo(struct pstat*);
 void            dumppgtab(int pid);
+int             getpte(int pid, int addr);
 
 // swtch.S
 void            swtch(struct context**, struct context*);
