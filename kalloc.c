@@ -39,6 +39,8 @@ kinit1(void *vstart, void *vend)
 void
 kinit2(void *vstart, void *vend)
 {
+  cprintf("kernel end %p\n", end);
+  cprintf("kinit2 %p -> %p\n", vstart, vend);
   freerange(vstart, vend);
   kmem.use_lock = 1;
 }
@@ -94,3 +96,15 @@ kalloc(void)
   return (char*)r;
 }
 
+int isfree(int ppn) {
+  uint addr = (uint)P2V(ppn * PGSIZE);
+  struct run*t;
+  t = kmem.freelist;
+  while(t) {
+    if (addr == (uint)t)
+      return 1;
+    else
+      t = t->next;
+  }
+  return 0;
+}

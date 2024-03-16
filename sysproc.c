@@ -159,5 +159,11 @@ int sys_getpagetableentry() {
 }
 
 int sys_isphysicalpagefree() {
-  return 0;
+  int ppn;
+
+  if (argint(0, &ppn) < 0) {
+    return 0;
+  } else {
+    return isfree(ppn);
+  }
 }

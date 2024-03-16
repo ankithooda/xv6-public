@@ -658,10 +658,6 @@ int getpte(int pid, int addr) {
   if (selected != -1) {
     p = walkpgdir(ptable.proc[selected].pgdir, (const void *)addr, 0);
     return (int)*p;
-    /*if (p == 0)
-      return 0;
-    else
-    return (int)*p;*/
   } else {
     return 0;
   }

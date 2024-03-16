@@ -19,6 +19,6 @@ int main(int argc, char *argv[])
     printf(1, "page entry for address 4096 is %p\n", getpagetableentry(pid, 4096));
     printf(1, "page entry for address 5000 is %p\n", getpagetableentry(pid, 5000));
     printf(1, "page entry for address %p is %p\n", p,getpagetableentry(pid, (int)p));
-    isphysicalpagefree(0x1000);
+    printf(1, "is ppn 5 free %d\n", isphysicalpagefree(10000));
     exit();
 }
