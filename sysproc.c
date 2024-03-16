@@ -50,7 +50,6 @@ sys_sbrk(void)
 
   if(argint(0, &n) < 0)
     return -1;
-  cprintf("%s - %d\n", myproc()->name, n);
   addr = myproc()->sz;
 
   // For negative arguments to sbrk (reducing process size)
@@ -63,6 +62,7 @@ sys_sbrk(void)
   } else {
       myproc()->sz = addr + n;
   }
+  cprintf("%s - %d - %d\n", myproc()->name, n, addr);
   return addr;
 }
 

@@ -7,33 +7,19 @@
 int
 main(int argc, char *argv[])
 {
-  /*uint *addr;
-  addr = malloc(50 * sizeof(uint));
-  *(addr + 0) = 1234;
-  *(addr + 49) = 9870;
-  printf(1, "%d\n", *(addr + 0));
-  printf(1, "%d\n", *(addr + 49));
-  free(addr);
-  */
-  /*struct pstat *p;
-  p = malloc(1000 * sizeof(struct pstat));
+  int a[100];
+  struct pstat *p;
+  p = malloc(10 * sizeof(struct pstat));
+  printf(1, "init stack vars %p - %p - %p\n", &argc, argv, &p);
+  printf(1, "stack data %p - %p\n", a, a+99);
+  printf(1, "heap address %p\n", p);
 
-  for (int i = 0; i < 5; i++) {
+  dumppagetable(getpid());
+  for (int i = 0; i < 10; i++) {
     getpinfo(p+i);
-    }*/
-
-
-  /*printf(1, "PID\tTICKETS\tTICKS\n");
-  for (int i = 0; i < NPROC; i++) {
-    if (p->inuse[i] == 1) {
-      printf(1, "%d\t%d\t%d\n", p->pid[i], p->tickets[i], p->ticks[i]);
-    }
-    }*/
-  //free(p);
-
-  struct pstat *add = (struct pstat*)8200;
-  getpinfo(add);
-  //printf(1, "%d\n", *add);
-
+    printf(1, "malloced address - %p\n", p+i);
+  }
+  printf(1, "##################\n#################\n###########################\n");
+  dumppagetable(getpid());
   exit();
 }

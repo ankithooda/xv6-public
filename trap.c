@@ -113,6 +113,7 @@ trap(struct trapframe *tf)
       goto kill_process;
     }
     memset(pa, 0, PGSIZE);
+    cprintf("allocating va %p\n", PGROUNDDOWN(rcr2()));
     if(mappages(myproc()->pgdir, (char*)PGROUNDDOWN(rcr2()), PGSIZE, V2P(pa), PTE_W|PTE_U) < 0){
       cprintf("allocuvm out of memory (2)\n");
       kfree(pa);

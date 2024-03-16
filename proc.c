@@ -595,14 +595,12 @@ procdump(void)
 
 void copypinfo(struct pstat *dest)
 {
-  cprintf("Address in kernel %d\n", dest);
   for (int i = 0; i < NPROC; i++) {
     dest->inuse[i] = ptable.stat.inuse[i];
     dest->pid[i] = ptable.stat.pid[i];
     dest->tickets[i] = ptable.stat.tickets[i];
     dest->ticks[i] = ptable.stat.ticks[i];
   }
-  cprintf("Done.\n");
 }
 
 void dumppgtab(int pid) {
@@ -623,7 +621,7 @@ void dumppgtab(int pid) {
       if (p == 0)
         return;
 
-      cprintf("%d ", i);
+      cprintf("%p ", i);
       if ((uint)*p&PTE_P)
         cprintf("P ");
       else
