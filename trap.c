@@ -16,6 +16,7 @@ struct spinlock tickslock;
 uint ticks;
 
 int mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm);
+pte_t *walkpgdir(pde_t *pgdir, const void *va, int alloc);
 
 void
 tvinit(void)
@@ -88,23 +89,61 @@ trap(struct trapframe *tf)
     if (myproc() == 0)
       goto kernel_panic;
 
-    // Kernel mode
+    // Kernel mode - Handle Lazy Allocation
     // if pagefault with read/write error code on unmapped memory; allocate page
     // otherwise kernel panic
     else if ((tf->cs&3) == 0)
       if (tf->trapno == T_PGFLT && (tf->err == 0 || tf->err == 2))
         goto allocate_page;
+      else if (tf->trapno == T_PGFLT && tf->err == 5)
+        goto handle_cow;
       else
         goto kernel_panic;
 
-    // User mode
+    // User mode - Handle Lazy Allocation and COW
     // If pagefault with read/write error code on unmapped memory; allocate page
     // otherwise kill user process
     else
       if (tf->trapno == T_PGFLT && (tf->err == 4 || tf->err == 6))
         goto allocate_page;
+      else if (tf->trapno == T_PGFLT && tf->err == 7)
+        goto handle_cow;
       else
         goto kill_process;
+
+  handle_cow:
+    pte_t *entry, *re_entry;
+    char *old_page, *new_page;
+
+    old_page = (char *)PGROUNDDOWN(rcr2());
+
+    entry = walkpgdir(myproc()->pgdir, (const void *)old_page, 0);
+
+    cprintf("COW access %s - %p - %p\n", myproc()->name, rcr2(), old_page);
+    cprintf("COW Flag - %p\n", *entry&PTE_COW);
+    cprintf("COW Page Entry - %p\n", *entry);
+
+    if (*entry&PTE_COW) {
+      new_page = kalloc();
+      if (new_page == 0) {
+        cprintf("allocuvm out of memory\n");
+        goto kill_process;
+      }
+      *entry = 0x0;
+      if (mappages(myproc()->pgdir, old_page, PGSIZE, V2P(new_page), PTE_W|PTE_U) < 0) {
+        cprintf("allocuvm out of memory (2)\n");
+        kfree(new_page);
+        goto kill_process;
+      }
+      memmove(new_page, old_page, PGSIZE);
+      cprintf("COW handling done old address - %p, new address - %p, old pa - %p, new pa - %p\n", old_page, new_page, V2P(old_page), V2P(new_page));
+      re_entry = walkpgdir(myproc()->pgdir, (const void *)old_page, 0);
+      cprintf("COW Handled - %p\n", *re_entry);
+      break;
+    }
+    else {
+      goto kill_process;
+    }
 
   allocate_page:
     char *pa = kalloc();
@@ -122,6 +161,7 @@ trap(struct trapframe *tf)
     break;
 
   kill_process:
+    cprintf("KILL KILLL KILLL KILLLLLLL\n");
     cprintf("pid %d %s: trap %d err %d on cpu %d "
             "eip 0x%x addr 0x%x--kill proc\n",
             myproc()->pid, myproc()->name, tf->trapno,
@@ -129,6 +169,7 @@ trap(struct trapframe *tf)
     myproc()->killed = 1;
     break;
   kernel_panic:
+    cprintf("Kernel panic ho hi gya\n");
     cprintf("unexpected trap %d err %d from cpu %d eip %x (cr2=0x%x)\n",
               tf->trapno, tf->err, cpuid(), tf->eip, rcr2());
     panic("trap");

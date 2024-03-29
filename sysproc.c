@@ -62,7 +62,6 @@ sys_sbrk(void)
   } else {
       myproc()->sz = addr + n;
   }
-  cprintf("%s - %d - %d\n", myproc()->name, n, addr);
   return addr;
 }
 
