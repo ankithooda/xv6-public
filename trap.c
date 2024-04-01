@@ -84,11 +84,11 @@ trap(struct trapframe *tf)
 
   //PAGEBREAK: 13
   default:
-    //pde_t *faulting_entry;
-    //faulting_entry = walkpgdir(myproc()->pgdir, (const void *)rcr2(), 0);
-
+    pde_t *faulting_entry;
+    faulting_entry = walkpgdir(myproc()->pgdir, (const void *)rcr2(), 0);
+    cprintf("Faulting entry %p\n", faulting_entry);
     cprintf("pid %d %s: trap %d err %d on cpu %d "
-            "eip 0x%x addr 0x%x %p--kill proc\n",
+            "eip 0x%x addr 0x%x --kill proc\n",
             myproc()->pid, myproc()->name, tf->trapno,
             tf->err, cpuid(), tf->eip, rcr2());
     // myproc() is zero there is some problem in kernel

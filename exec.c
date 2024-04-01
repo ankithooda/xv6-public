@@ -38,13 +38,14 @@ exec(char *path, char **argv)
   if((pgdir = setupkvm()) == 0)
     goto bad;
 
-  cprintf("EXECING %s EXECING\n", path);
   sz = 0;
+  cprintf("EXECING %s EXECING\n", path);
+  cprintf("PROCESS START VA %p\n", sz);
+
   // Allocate guard page at 0 address and clear it's PTEs
   if((sz = allocuvm(pgdir, sz, sz + 1*PGSIZE)) == 0)
     goto bad;
   clearpteu(pgdir, 0);
-  cprintf("PROCESS START VA %p\n", sz);
 
   // Load program into kernel memory.
   for(i=0, off=elf.phoff; i<elf.phnum; i++, off+=sizeof(ph)){
