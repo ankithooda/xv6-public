@@ -194,6 +194,7 @@ fork(void)
   if((np = allocproc()) == 0){
     return -1;
   }
+  cprintf("FORKING %s \n", curproc->name);
 
   // Copy process state from proc.
   if((np->pgdir = copyuvm(curproc->pgdir, curproc->sz)) == 0){

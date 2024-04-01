@@ -38,11 +38,13 @@ exec(char *path, char **argv)
   if((pgdir = setupkvm()) == 0)
     goto bad;
 
+  cprintf("EXECING %s EXECING\n", path);
   sz = 0;
   // Allocate guard page at 0 address and clear it's PTEs
   if((sz = allocuvm(pgdir, sz, sz + 1*PGSIZE)) == 0)
     goto bad;
   clearpteu(pgdir, 0);
+  cprintf("PROCESS START VA %p\n", sz);
 
   // Load program into kernel memory.
   for(i=0, off=elf.phoff; i<elf.phnum; i++, off+=sizeof(ph)){
@@ -98,6 +100,7 @@ exec(char *path, char **argv)
       last = s+1;
   safestrcpy(curproc->name, last, sizeof(curproc->name));
 
+  cprintf("PROCESS END VA %p\n", sz);
   // Commit to the user image.
   oldpgdir = curproc->pgdir;
   curproc->pgdir = pgdir;

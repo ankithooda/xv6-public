@@ -237,6 +237,7 @@ allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
       deallocuvm(pgdir, newsz, oldsz);
       return 0;
     }
+    cprintf("ALLOCUVM %p\n", mem);
     memset(mem, 0, PGSIZE);
     if(mappages(pgdir, (char*)a, PGSIZE, V2P(mem), PTE_W|PTE_U) < 0){
       cprintf("allocuvm out of memory (2)\n");
@@ -316,13 +317,13 @@ pde_t*
 copyuvm(pde_t *pgdir, uint sz)
 {
   pde_t *d;
-  pte_t *pte;
+  pte_t *pte, *re_pte;
   uint pa, i, flags;
   //char *mem;
 
   if((d = setupkvm()) == 0)
     return 0;
-  for(i = PGSIZE; i < sz; i += PGSIZE){
+  for(i = 0; i < sz; i += PGSIZE){
     if((pte = walkpgdir(pgdir, (void *) i, 0)) == 0)
       panic("copyuvm: pte should exist");
     if(!(*pte & PTE_P))
@@ -338,6 +339,8 @@ copyuvm(pde_t *pgdir, uint sz)
       //kfree(mem);
       goto bad;
     }
+    re_pte = walkpgdir(d, (void *)i, 0);
+    cprintf("FORK with COW - %p, %p, %p\n", i, pa, *re_pte);
   }
   return d;
 
