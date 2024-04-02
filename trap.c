@@ -133,6 +133,7 @@ trap(struct trapframe *tf)
 
     if (*entry&PTE_COW) {
       new_phys_page = kalloc();
+      cprintf("COW New Phys Page %p\n", new_phys_page);
       if (new_phys_page == 0) {
         cprintf("allocuvm out of memory\n");
         goto kill_process;
@@ -156,6 +157,7 @@ trap(struct trapframe *tf)
 
   allocate_page:
     char *pa = kalloc();
+    cprintf("Lazy Mem %p\n", pa);
     if(pa == 0){
       cprintf("allocuvm out of memory\n");
       goto kill_process;

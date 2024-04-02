@@ -100,6 +100,7 @@ found:
     p->state = UNUSED;
     return 0;
   }
+  cprintf("Allocproc KSTACK %p\n", p->kstack);
   sp = p->kstack + KSTACKSIZE;
 
   // Leave room for trap frame.

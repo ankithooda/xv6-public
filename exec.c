@@ -18,7 +18,7 @@ exec(char *path, char **argv)
   struct proghdr ph;
   pde_t *pgdir, *oldpgdir;
   struct proc *curproc = myproc();
-
+  cprintf("EXECING %s EXECING\n", path);
   begin_op();
 
   if((ip = namei(path)) == 0){
@@ -37,9 +37,9 @@ exec(char *path, char **argv)
 
   if((pgdir = setupkvm()) == 0)
     goto bad;
+  cprintf("PGDIR SETUPKVM %p\n", pgdir);
 
   sz = 0;
-  cprintf("EXECING %s EXECING\n", path);
   cprintf("PROCESS START VA %p\n", sz);
 
   // Allocate guard page at 0 address and clear it's PTEs

@@ -30,6 +30,7 @@ pipealloc(struct file **f0, struct file **f1)
     goto bad;
   if((p = (struct pipe*)kalloc()) == 0)
     goto bad;
+  cprintf("Pipe Kalloc %p\n", p);
   p->readopen = 1;
   p->writeopen = 1;
   p->nwrite = 0;
