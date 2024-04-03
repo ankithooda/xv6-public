@@ -37,7 +37,7 @@ exec(char *path, char **argv)
 
   if((pgdir = setupkvm()) == 0)
     goto bad;
-  cprintf("PGDIR SETUPKVM %p\n", pgdir);
+  cprintf("PGDIR %p\n", pgdir);
 
   sz = 0;
   cprintf("PROCESS START VA %p\n", sz);

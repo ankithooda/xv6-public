@@ -87,6 +87,7 @@ trap(struct trapframe *tf)
     pde_t *faulting_entry;
     faulting_entry = walkpgdir(myproc()->pgdir, (const void *)rcr2(), 0);
     cprintf("Faulting entry %p\n", faulting_entry);
+    cprintf("Faulting entry value %p\n", *faulting_entry);
     cprintf("pid %d %s: trap %d err %d on cpu %d "
             "eip 0x%x addr 0x%x --kill proc\n",
             myproc()->pid, myproc()->name, tf->trapno,
