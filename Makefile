@@ -150,7 +150,6 @@ _%: %.o $(ULIB)
 	$(LD) $(LDFLAGS) -N -e main -Ttext 0x1000 -o $@ $^
 	$(OBJDUMP) -S $@ > $*.asm
 	$(OBJDUMP) -t $@ | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > $*.sym
-	strip $@
 
 _forktest: forktest.o $(ULIB)
 	# forktest has less library code linked in - needs to be small
@@ -191,8 +190,6 @@ UPROGS=\
 	_test_defp\
 	_test_mem\
 	_test_dumppt\
-    _pp_suite\
-	_pp_test\
 	_ptetool\
 
 fs.img: mkfs README $(UPROGS)
