@@ -109,7 +109,8 @@ exec(char *path, char **argv)
   curproc->tf->eip = elf.entry;  // main
   curproc->tf->esp = sp;
   switchuvm(curproc);
-  freevm(oldpgdir);
+  cprintf("EXEC COMPLETE BUT WE ARE NOT FREEING %p\n", oldpgdir);
+  //freevm(oldpgdir);
   return 0;
 
  bad:
