@@ -50,7 +50,7 @@ walkpgdir(pde_t *pgdir, const void *va, int alloc)
     // be further restricted by the permissions in the page table
     // entries, if necessary.
     *pde = V2P(pgtab) | PTE_P | PTE_W | PTE_U;
-    cprintf("Allocated Memory for Page Entries %p\n", pgtab);
+    cprintf("Allocated Memory for Page Entries %p - %p - %p\n", pgdir, pgtab, va);
   }
   return &pgtab[PTX(va)];
 }
