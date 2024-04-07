@@ -21,6 +21,8 @@ struct {
   struct spinlock lock;
   int use_lock;
   struct run *freelist;
+  char *cow_refbase;
+  char *cow_vmbase;
 } kmem;
 
 // Initialization happens in two phases.
@@ -31,6 +33,8 @@ struct {
 void
 kinit1(void *vstart, void *vend)
 {
+  cprintf("kinit1 kernel end %p\n", end);
+  cprintf("kinit1 %p -> %p\n", vstart, vend);
   initlock(&kmem.lock, "kmem");
   kmem.use_lock = 0;
   freerange(vstart, vend);
@@ -39,19 +43,37 @@ kinit1(void *vstart, void *vend)
 void
 kinit2(void *vstart, void *vend)
 {
-  cprintf("kernel end %p\n", end);
+  cprintf("kinit2 kernel end %p\n", end);
   cprintf("kinit2 %p -> %p\n", vstart, vend);
+  char *s = (char*)PGROUNDUP((uint)vstart);
+  char *e = (char*)PGROUNDUP((uint)vend);
+  uint refs_page_count = (e - s) / PGSIZE;
+
+  kmem.cow_refbase = (char*)vstart;
+  // zero the ref count memory
+  memset(kmem.cow_refbase, 0, PGSIZE * refs_page_count);
+
+  cprintf("COW REF %d - %p - %p\n", refs_page_count, kmem.cow_refbase, (char*)vstart + refs_page_count);
+  vstart = (void*)((char*)vstart + refs_page_count);
+  kmem.cow_vmbase = vstart;
   freerange(vstart, vend);
   kmem.use_lock = 1;
 }
+
 
 void
 freerange(void *vstart, void *vend)
 {
   char *p;
+  int pages = 0;
   p = (char*)PGROUNDUP((uint)vstart);
-  for(; p + PGSIZE <= (char*)vend; p += PGSIZE)
+  cprintf("Free range called %p - %p\n", vstart, vend);
+  cprintf("First available page %p - %d\n", p, pages);
+  for(; p + PGSIZE <= (char*)vend; p += PGSIZE) {
+    pages++;
     kfree(p);
+  }
+  cprintf("Total Available Pages - %d\n", pages);
 }
 //PAGEBREAK: 21
 // Free the page of physical memory pointed at by v,
