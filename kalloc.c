@@ -55,11 +55,24 @@ kinit2(void *vstart, void *vend)
 
   cprintf("COW REF %d - %p - %p\n", refs_page_count, kmem.cow_refbase, (char*)vstart + refs_page_count);
   vstart = (void*)((char*)vstart + refs_page_count);
-  kmem.cow_vmbase = vstart;
+
   freerange(vstart, vend);
   kmem.use_lock = 1;
 }
 
+void
+inc_cow_ref(void *pa) {
+  uint ref_index;
+  cprintf("COW REF REQ %p - %p - %p\n", pa, kmem.cow_refbase, kmem.cow_vmbase);
+  if(kmem.use_lock)
+    acquire(&kmem.lock);
+  ref_index = ((char*)pa - kmem.cow_vmbase) / PGSIZE;
+
+  *(kmem.cow_refbase + ref_index) = *(kmem.cow_refbase + ref_index) + 1;
+  if(kmem.use_lock)
+    release(&kmem.lock);
+  cprintf("COW REF INC %p - %d - %d\n", pa, ref_index, *(kmem.cow_refbase + ref_index));
+}
 
 void
 freerange(void *vstart, void *vend)
@@ -67,6 +80,7 @@ freerange(void *vstart, void *vend)
   char *p;
   int pages = 0;
   p = (char*)PGROUNDUP((uint)vstart);
+  kmem.cow_vmbase = p;
   cprintf("Free range called %p - %p\n", vstart, vend);
   cprintf("First available page %p - %d\n", p, pages);
   for(; p + PGSIZE <= (char*)vend; p += PGSIZE) {
@@ -115,6 +129,7 @@ kalloc(void)
     kmem.freelist = r->next;
   if(kmem.use_lock)
     release(&kmem.lock);
+  inc_cow_ref(r);
   return (char*)r;
 }
 

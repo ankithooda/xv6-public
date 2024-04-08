@@ -341,6 +341,8 @@ copyuvm(pde_t *pgdir, uint sz)
     *pte &= ~PTE_W;            // Mark entry read only
     *pte |= PTE_COW;           // Mark entry as COW
     flags = PTE_FLAGS(*pte);
+    // Increment ref count
+    inc_cow_ref((void *)P2V(pa));
     //if((mem = kalloc()) == 0)
     //  goto bad;
     //memmove(mem, (char*)P2V(pa), PGSIZE);
