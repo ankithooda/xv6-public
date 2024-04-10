@@ -343,6 +343,7 @@ copyuvm(pde_t *pgdir, uint sz)
     flags = PTE_FLAGS(*pte);
     // Increment ref count
     inc_cow_ref((void *)P2V(pa));
+
     //if((mem = kalloc()) == 0)
     //  goto bad;
     //memmove(mem, (char*)P2V(pa), PGSIZE);

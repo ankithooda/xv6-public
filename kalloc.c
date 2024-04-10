@@ -61,13 +61,35 @@ kinit2(void *vstart, void *vend)
 }
 
 void
+kfreeinit(char *v)
+{
+  struct run *r;
+
+  if((uint)v % PGSIZE || v < end || V2P(v) >= PHYSTOP)
+    panic("kfree");
+
+  // Fill with junk to catch dangling refs.
+  memset(v, 1, PGSIZE);
+
+  if(kmem.use_lock)
+    acquire(&kmem.lock);
+
+  r = (struct run*)v;
+  r->next = kmem.freelist;
+  kmem.freelist = r;
+
+  if(kmem.use_lock)
+    release(&kmem.lock);
+}
+
+void
 inc_cow_ref(void *pa) {
   uint ref_index;
-  cprintf("COW REF REQ %p - %p - %p\n", pa, kmem.cow_refbase, kmem.cow_vmbase);
+
   if(kmem.use_lock)
     acquire(&kmem.lock);
   ref_index = ((char*)pa - kmem.cow_vmbase) / PGSIZE;
-
+  cprintf("COW REF REQ %p - %p - %p - %d\n", pa, kmem.cow_refbase, kmem.cow_vmbase, *(kmem.cow_refbase + ref_index));
   *(kmem.cow_refbase + ref_index) = *(kmem.cow_refbase + ref_index) + 1;
   if(kmem.use_lock)
     release(&kmem.lock);
@@ -85,7 +107,7 @@ freerange(void *vstart, void *vend)
   cprintf("First available page %p - %d\n", p, pages);
   for(; p + PGSIZE <= (char*)vend; p += PGSIZE) {
     pages++;
-    kfree(p);
+    kfreeinit(p);
   }
   cprintf("Total Available Pages - %d\n", pages);
 }
@@ -94,10 +116,13 @@ freerange(void *vstart, void *vend)
 // which normally should have been returned by a
 // call to kalloc().  (The exception is when
 // initializing the allocator; see kinit above.)
+// We need to separate both versions of kfree
+// one which is called by kinit
 void
 kfree(char *v)
 {
   struct run *r;
+  uint ref_index;
 
   if((uint)v % PGSIZE || v < end || V2P(v) >= PHYSTOP)
     panic("kfree");
@@ -107,9 +132,20 @@ kfree(char *v)
 
   if(kmem.use_lock)
     acquire(&kmem.lock);
-  r = (struct run*)v;
-  r->next = kmem.freelist;
-  kmem.freelist = r;
+
+
+
+  // Decrement cow ref
+  ref_index = ((char*)v - kmem.cow_vmbase) / PGSIZE;
+  cprintf("COW DEC %p - %d\n", v,*(kmem.cow_refbase + ref_index));
+  *(kmem.cow_refbase + ref_index) = *(kmem.cow_refbase + ref_index) - 1;
+  cprintf("COW DEC %p - %d\n", v,*(kmem.cow_refbase + ref_index));
+  // Check if no process references this page.
+  if (*(kmem.cow_refbase + ref_index) <= 0) {
+    r = (struct run*)v;
+    r->next = kmem.freelist;
+    kmem.freelist = r;
+  }
   if(kmem.use_lock)
     release(&kmem.lock);
 }

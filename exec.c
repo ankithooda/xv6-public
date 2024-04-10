@@ -110,7 +110,7 @@ exec(char *path, char **argv)
   curproc->tf->esp = sp;
   switchuvm(curproc);
   cprintf("EXEC COMPLETE BUT WE ARE NOT FREEING %p\n", oldpgdir);
-  //freevm(oldpgdir);
+  freevm(oldpgdir);
   return 0;
 
  bad:
