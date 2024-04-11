@@ -18,7 +18,6 @@ exec(char *path, char **argv)
   struct proghdr ph;
   pde_t *pgdir, *oldpgdir;
   struct proc *curproc = myproc();
-  cprintf("EXECING %s EXECING\n", path);
   begin_op();
 
   if((ip = namei(path)) == 0){
@@ -37,10 +36,8 @@ exec(char *path, char **argv)
 
   if((pgdir = setupkvm()) == 0)
     goto bad;
-  cprintf("PGDIR %p\n", pgdir);
 
   sz = 0;
-  cprintf("PROCESS START VA %p\n", sz);
 
   // Allocate guard page at 0 address and clear it's PTEs
   if((sz = allocuvm(pgdir, sz, sz + 1*PGSIZE)) == 0)
@@ -101,7 +98,6 @@ exec(char *path, char **argv)
       last = s+1;
   safestrcpy(curproc->name, last, sizeof(curproc->name));
 
-  cprintf("PROCESS END VA %p\n", sz);
   // Commit to the user image.
   oldpgdir = curproc->pgdir;
   curproc->pgdir = pgdir;
@@ -109,7 +105,6 @@ exec(char *path, char **argv)
   curproc->tf->eip = elf.entry;  // main
   curproc->tf->esp = sp;
   switchuvm(curproc);
-  cprintf("EXEC COMPLETE BUT WE ARE NOT FREEING %p\n", oldpgdir);
   freevm(oldpgdir);
   return 0;
 

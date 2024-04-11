@@ -5,7 +5,6 @@
 int
 main(int argc, char *argv[])
 {
-  //printf(1, "Hello World %d\n", getreadcount());
-  //printf(1, "Hello World\n");
+  printf(1, "\n\n\n\n\n\n\n\n\n\n\n\n $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$4 \n\n\n\n\n\n\n\n\n\n\n\n\n\n");
   exit();
 }

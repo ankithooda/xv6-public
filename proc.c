@@ -100,7 +100,6 @@ found:
     p->state = UNUSED;
     return 0;
   }
-  cprintf("Allocproc KSTACK %p\n", p->kstack);
   sp = p->kstack + KSTACKSIZE;
 
   // Leave room for trap frame.
@@ -195,7 +194,6 @@ fork(void)
   if((np = allocproc()) == 0){
     return -1;
   }
-  cprintf("FORKING %s \n", curproc->name);
 
   // Copy process state from proc.
   if((np->pgdir = copyuvm(curproc->pgdir, curproc->sz)) == 0){
@@ -585,8 +583,9 @@ procdump(void)
       state = states[p->state];
     else
       state = "???";
-    cprintf("%d %s %s", p->pid, state, p->name);
+
     if(p->state == SLEEPING){
+      cprintf("%d %s %s", p->pid, state, p->name);
       getcallerpcs((uint*)p->context->ebp+2, pc);
       for(i=0; i<10 && pc[i] != 0; i++)
         cprintf(" %p", pc[i]);

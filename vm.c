@@ -50,7 +50,6 @@ walkpgdir(pde_t *pgdir, const void *va, int alloc)
     // be further restricted by the permissions in the page table
     // entries, if necessary.
     *pde = V2P(pgtab) | PTE_P | PTE_W | PTE_U;
-    cprintf("Allocated Memory for Page Entries %p - %p - %p\n", pgdir, pgtab, va);
   }
   return &pgtab[PTX(va)];
 }
@@ -124,7 +123,6 @@ setupkvm(void)
 
   if((pgdir = (pde_t*)kalloc()) == 0)
     return 0;
-  cprintf("KVM PGDIR %p\n", pgdir);
   memset(pgdir, 0, PGSIZE);
   if (P2V(PHYSTOP) > (void*)DEVSPACE)
     panic("PHYSTOP too high");
@@ -189,7 +187,6 @@ inituvm(pde_t *pgdir, char *init, uint sz)
   if(sz >= PGSIZE)
     panic("inituvm: more than a page");
   mem = kalloc();
-  cprintf("Init UVM %p\n", mem);
   memset(mem, 0, PGSIZE);
   mappages(pgdir, 0, PGSIZE, V2P(mem), PTE_W|PTE_U);
   memmove(mem, init, sz);
@@ -240,7 +237,6 @@ allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
       deallocuvm(pgdir, newsz, oldsz);
       return 0;
     }
-    cprintf("UVM %p - %p\n", mem, a);
     memset(mem, 0, PGSIZE);
     if(mappages(pgdir, (char*)a, PGSIZE, V2P(mem), PTE_W|PTE_U) < 0){
       cprintf("allocuvm out of memory (2)\n");
@@ -320,7 +316,7 @@ pde_t*
 copyuvm(pde_t *pgdir, uint sz)
 {
   pde_t *d;
-  pte_t *pte, *re_pte;
+  pte_t *pte;
   uint pa, i, flags;
   //char *mem;
 
@@ -329,7 +325,6 @@ copyuvm(pde_t *pgdir, uint sz)
   for(i = 0; i < sz; i += PGSIZE){
     if((pte = walkpgdir(pgdir, (void *) i, 0)) == 0)
       panic("copyuvm: pte should exist");
-    cprintf("COPYUVM %p - %p\n", *pte, i);
     // Due to lazy alloc it is possible that parent
     // does not have all of it's memory allocated.
     // therefore we skip if parent page does not exist
@@ -351,8 +346,6 @@ copyuvm(pde_t *pgdir, uint sz)
       //kfree(mem);
       goto bad;
     }
-    re_pte = walkpgdir(d, (void *)i, 0);
-    cprintf("FORK with COW - %p, %p, %p\n", i, pa, *re_pte);
   }
   return d;
 

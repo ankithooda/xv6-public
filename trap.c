@@ -152,6 +152,8 @@ trap(struct trapframe *tf)
       memmove(new_phys_page, P2V(old_phys_page), PGSIZE);
       re_entry = walkpgdir(myproc()->pgdir, (void *)rcr2(), 0);
       cprintf("COW Handled - %p\n", *re_entry);
+      lcr3(V2P(myproc()->pgdir));
+      cprintf("TLB FLushed\n");
       break;
     }
     else {
@@ -172,6 +174,7 @@ trap(struct trapframe *tf)
       kfree(pa);
       goto kill_process;
     }
+    lcr3(V2P(myproc()->pgdir));
     break;
 
   kill_process:

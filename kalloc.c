@@ -33,8 +33,6 @@ struct {
 void
 kinit1(void *vstart, void *vend)
 {
-  cprintf("kinit1 kernel end %p\n", end);
-  cprintf("kinit1 %p -> %p\n", vstart, vend);
   initlock(&kmem.lock, "kmem");
   kmem.use_lock = 0;
   freerange(vstart, vend);
@@ -43,8 +41,6 @@ kinit1(void *vstart, void *vend)
 void
 kinit2(void *vstart, void *vend)
 {
-  cprintf("kinit2 kernel end %p\n", end);
-  cprintf("kinit2 %p -> %p\n", vstart, vend);
   char *s = (char*)PGROUNDUP((uint)vstart);
   char *e = (char*)PGROUNDUP((uint)vend);
   uint refs_page_count = (e - s) / PGSIZE;
@@ -53,9 +49,7 @@ kinit2(void *vstart, void *vend)
   // zero the ref count memory
   memset(kmem.cow_refbase, 0, PGSIZE * refs_page_count);
 
-  cprintf("COW REF %d - %p - %p\n", refs_page_count, kmem.cow_refbase, (char*)vstart + refs_page_count);
   vstart = (void*)((char*)vstart + refs_page_count);
-
   freerange(vstart, vend);
   kmem.use_lock = 1;
 }
@@ -89,11 +83,9 @@ inc_cow_ref(void *pa) {
   if(kmem.use_lock)
     acquire(&kmem.lock);
   ref_index = ((char*)pa - kmem.cow_vmbase) / PGSIZE;
-  cprintf("COW REF REQ %p - %p - %p - %d\n", pa, kmem.cow_refbase, kmem.cow_vmbase, *(kmem.cow_refbase + ref_index));
   *(kmem.cow_refbase + ref_index) = *(kmem.cow_refbase + ref_index) + 1;
   if(kmem.use_lock)
     release(&kmem.lock);
-  cprintf("COW REF INC %p - %d - %d\n", pa, ref_index, *(kmem.cow_refbase + ref_index));
 }
 
 void
@@ -103,13 +95,10 @@ freerange(void *vstart, void *vend)
   int pages = 0;
   p = (char*)PGROUNDUP((uint)vstart);
   kmem.cow_vmbase = p;
-  cprintf("Free range called %p - %p\n", vstart, vend);
-  cprintf("First available page %p - %d\n", p, pages);
   for(; p + PGSIZE <= (char*)vend; p += PGSIZE) {
     pages++;
     kfreeinit(p);
   }
-  cprintf("Total Available Pages - %d\n", pages);
 }
 //PAGEBREAK: 21
 // Free the page of physical memory pointed at by v,
@@ -137,9 +126,8 @@ kfree(char *v)
 
   // Decrement cow ref
   ref_index = ((char*)v - kmem.cow_vmbase) / PGSIZE;
-  cprintf("COW DEC %p - %d\n", v,*(kmem.cow_refbase + ref_index));
   *(kmem.cow_refbase + ref_index) = *(kmem.cow_refbase + ref_index) - 1;
-  cprintf("COW DEC %p - %d\n", v,*(kmem.cow_refbase + ref_index));
+
   // Check if no process references this page.
   if (*(kmem.cow_refbase + ref_index) <= 0) {
     r = (struct run*)v;
