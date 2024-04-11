@@ -336,8 +336,6 @@ copyuvm(pde_t *pgdir, uint sz)
     *pte &= ~PTE_W;            // Mark entry read only
     *pte |= PTE_COW;           // Mark entry as COW
     flags = PTE_FLAGS(*pte);
-    // Increment ref count
-    inc_cow_ref((void *)P2V(pa));
 
     //if((mem = kalloc()) == 0)
     //  goto bad;
@@ -346,6 +344,11 @@ copyuvm(pde_t *pgdir, uint sz)
       //kfree(mem);
       goto bad;
     }
+    // Increment ref count
+    inc_cow_ref((void *)P2V(pa));
+    lcr3(V2P(pgdir));
+    // No need to call lcr3 on d as that process has not been scheduled yet.
+    // When it gets scheduled TLB will be flushed anyways.
   }
   return d;
 
