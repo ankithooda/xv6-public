@@ -60,7 +60,7 @@ kfreeinit(char *v)
   struct run *r;
 
   if((uint)v % PGSIZE || v < end || V2P(v) >= PHYSTOP)
-    panic("kfree");
+    panic("kfreeinit");
 
   // Fill with junk to catch dangling refs.
   memset(v, 1, PGSIZE);
@@ -76,16 +76,69 @@ kfreeinit(char *v)
     release(&kmem.lock);
 }
 
-void
-inc_cow_ref(void *pa) {
-  uint ref_index;
+// This takes a lock on the kernel memory structure
+// Meant to be called from
+// copyuvm
+// kalloc increments the kmem struct directly.
+// since it already holds the lock.
+// This function takes the virtual address (kernel) of the page.
+// Also returns the incremented value.
+uint
+inc_cow_ref(char *pa) {
+  uint ref_index, value;
+
+  if((uint)pa % PGSIZE || pa < end || V2P(pa) >= PHYSTOP)
+    panic("Incrementing COW reference.");
+
+  if(kmem.use_lock)
+    acquire(&kmem.lock);
+  ref_index = (pa - kmem.cow_vmbase) / PGSIZE;
+
+  *(kmem.cow_refbase + ref_index) = *(kmem.cow_refbase + ref_index) + 1;
+  value = *(kmem.cow_refbase + ref_index);
+  //cprintf("INCREMENTING page - %p - %d\n", pa, *(kmem.cow_refbase + ref_index));
+  if(kmem.use_lock)
+    release(&kmem.lock);
+  return value;
+}
+
+// This takes a lock on the kernel memory structure
+// Meant to be called from
+// copyuvm or trap.c
+// kfree decrements the kmem struct directly.
+// since it already holds the lock.
+// This function takes the virtual address (kernel) of the page.
+// Returns the decremented value.
+uint
+dec_cow_ref(char *pa) {
+  uint ref_index, value;
+
+  if((uint)pa % PGSIZE || pa < end || V2P(pa) >= PHYSTOP)
+    panic("Decrementing COW reference.");
 
   if(kmem.use_lock)
     acquire(&kmem.lock);
   ref_index = ((char*)pa - kmem.cow_vmbase) / PGSIZE;
-  *(kmem.cow_refbase + ref_index) = *(kmem.cow_refbase + ref_index) + 1;
+
+  *(kmem.cow_refbase + ref_index) = *(kmem.cow_refbase + ref_index) - 1;
+  value = *(kmem.cow_refbase + ref_index);
+  //cprintf("DECREMENTING page - %p - %d\n", pa, *(kmem.cow_refbase + ref_index));
   if(kmem.use_lock)
     release(&kmem.lock);
+  return value;
+}
+
+uint
+get_cow_ref(char *pa) {
+  uint ref_index, value;
+
+  if(kmem.use_lock)
+    acquire(&kmem.lock);
+  ref_index = ((char*)pa - kmem.cow_vmbase) / PGSIZE;
+  value = (uint)*(kmem.cow_refbase + ref_index);
+  if(kmem.use_lock)
+    release(&kmem.lock);
+  return value;
 }
 
 void
@@ -122,14 +175,14 @@ kfree(char *v)
   if(kmem.use_lock)
     acquire(&kmem.lock);
 
-
-
   // Decrement cow ref
   ref_index = ((char*)v - kmem.cow_vmbase) / PGSIZE;
   *(kmem.cow_refbase + ref_index) = *(kmem.cow_refbase + ref_index) - 1;
+  //cprintf("DECREMENTED PAGE - %p - %d\n", v, *(kmem.cow_refbase + ref_index));
 
   // Check if no process references this page.
   if (*(kmem.cow_refbase + ref_index) <= 0) {
+    //cprintf("ACTUALLY FREEING PAGE - %p\n", v);
     r = (struct run*)v;
     r->next = kmem.freelist;
     kmem.freelist = r;
@@ -145,15 +198,20 @@ char*
 kalloc(void)
 {
   struct run *r;
+  uint ref_index;
 
   if(kmem.use_lock)
     acquire(&kmem.lock);
   r = kmem.freelist;
-  if(r)
+  if(r) {
     kmem.freelist = r->next;
+
+    // Increment the COW ref.
+    ref_index = ((char*)r - kmem.cow_vmbase) / PGSIZE;
+    *(kmem.cow_refbase + ref_index) = *(kmem.cow_refbase + ref_index) + 1;
+  }
   if(kmem.use_lock)
     release(&kmem.lock);
-  inc_cow_ref(r);
   return (char*)r;
 }
 

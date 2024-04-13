@@ -202,6 +202,7 @@ fork(void)
     np->state = UNUSED;
     return -1;
   }
+  cprintf("FORKED PROCESS PGDIR %p\n", np->pgdir);
   np->sz = curproc->sz;
   np->parent = curproc;
   np->tickets = curproc->tickets;
@@ -638,7 +639,9 @@ void dumppgtab(int pid) {
       else
         cprintf("- ");
 
-      cprintf("%p\n", PTE_ADDR(*p));
+      cprintf("%p ", PTE_ADDR(*p));
+      cprintf("%d ", isfree(V2P(PTE_ADDR(*p))));
+      cprintf("%d \n", get_cow_ref((void*)PTE_ADDR(*p)));
     }
     cprintf("END PAGE TABLE\n");
   }

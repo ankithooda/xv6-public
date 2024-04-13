@@ -87,8 +87,8 @@ trap(struct trapframe *tf)
     pde_t *faulting_entry;
     faulting_entry = walkpgdir(myproc()->pgdir, (const void *)rcr2(), 0);
     cprintf("Faulting process %p - %s - %d\n", myproc()->pgdir, myproc()->name, myproc()->pid);
-    cprintf("Faulting entry %p\n", faulting_entry);
-    cprintf("Faulting entry value %p\n", *faulting_entry);
+    cprintf("Faulting entry %p - %p\n", faulting_entry, *faulting_entry);
+
     cprintf("pid %d %s: trap %d err %d on cpu %d "
             "eip 0x%x addr 0x%x --kill proc\n",
             myproc()->pid, myproc()->name, tf->trapno,
@@ -132,26 +132,33 @@ trap(struct trapframe *tf)
     cprintf("COW Flag - %p\n", *entry&PTE_COW);
     cprintf("COW Page Entry - %p\n", *entry);
     cprintf("COW Old Physical Page - %p\n", old_phys_page);
-
+    dumppgtab(myproc()->pid);
 
     if (*entry&PTE_COW) {
-      new_phys_page = kalloc();
-      cprintf("COW New Phys Page %p\n", new_phys_page);
-      if (new_phys_page == 0) {
-        cprintf("allocuvm out of memory\n");
-        goto kill_process;
+      // COW ref count is 1, just set the page to writable.
+      if (get_cow_ref((void*)old_phys_page) == 1) {
+
+        *entry = *entry | PTE_W ;
+        cprintf("COW - Setting the page - %p to be writable and non-cow - %p - %p\n", old_phys_page, entry, *entry);
+      } else {
+        new_phys_page = kalloc();
+        if (new_phys_page == 0) {
+          cprintf("allocuvm out of memory\n");
+          goto kill_process;
+        }
+        *entry = 0x0;
+        if (mappages(myproc()->pgdir, (void *)PGROUNDDOWN(rcr2()), PGSIZE, V2P(new_phys_page), PTE_W|PTE_U) < 0) {
+          cprintf("allocuvm out of memory (2)\n");
+          kfree(new_phys_page);
+          goto kill_process;
+        }
+        cprintf("Is memmove throwing trap\n");
+        cprintf("COW handling done new address - %p, old address - %p\n", new_phys_page, old_phys_page);
+        memmove(new_phys_page, P2V(old_phys_page), PGSIZE);
+        re_entry = walkpgdir(myproc()->pgdir, (void *)rcr2(), 0);
+        dec_cow_ref(P2V(old_phys_page));
+        cprintf("COW Handled - %p\n", *re_entry);
       }
-      *entry = 0x0;
-      if (mappages(myproc()->pgdir, (void *)PGROUNDDOWN(rcr2()), PGSIZE, V2P(new_phys_page), PTE_W|PTE_U) < 0) {
-        cprintf("allocuvm out of memory (2)\n");
-        kfree(new_phys_page);
-        goto kill_process;
-      }
-      cprintf("Is memmove throwing trap\n");
-      cprintf("COW handling done new address - %p, old address - %p\n", new_phys_page, old_phys_page);
-      memmove(new_phys_page, P2V(old_phys_page), PGSIZE);
-      re_entry = walkpgdir(myproc()->pgdir, (void *)rcr2(), 0);
-      cprintf("COW Handled - %p\n", *re_entry);
       lcr3(V2P(myproc()->pgdir));
       cprintf("TLB FLushed\n");
       break;
@@ -174,6 +181,7 @@ trap(struct trapframe *tf)
       kfree(pa);
       goto kill_process;
     }
+    dumppgtab(myproc()->pid);
     lcr3(V2P(myproc()->pgdir));
     break;
 

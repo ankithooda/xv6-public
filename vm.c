@@ -44,6 +44,7 @@ walkpgdir(pde_t *pgdir, const void *va, int alloc)
   } else {
     if(!alloc || (pgtab = (pte_t*)kalloc()) == 0)
       return 0;
+    //cprintf("PAGE ALLOCATED FOR Entries - PGDIR - %p - PAGE - %p\n", pgdir, pgtab);
     // Make sure all those PTE_P bits are zero.
     memset(pgtab, 0, PGSIZE);
     // The permissions here are overly generous, but they can
@@ -123,6 +124,7 @@ setupkvm(void)
 
   if((pgdir = (pde_t*)kalloc()) == 0)
     return 0;
+//  cprintf("SETUP KVM PGDIR %p\n", pgdir);
   memset(pgdir, 0, PGSIZE);
   if (P2V(PHYSTOP) > (void*)DEVSPACE)
     panic("PHYSTOP too high");
@@ -261,9 +263,13 @@ deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
   if(newsz >= oldsz)
     return oldsz;
 
+  cprintf("DEALLOCING UVM %p - %p - %p\n", pgdir, oldsz, newsz);
+
   a = PGROUNDUP(newsz);
+  cprintf("*************************************************************************\n\n\n");
   for(; a  < oldsz; a += PGSIZE){
     pte = walkpgdir(pgdir, (char*)a, 0);
+    //cprintf("DEALLOCING UVM PTE FETCHED - %p\n", pte);
     if(!pte)
       a = PGADDR(PDX(a) + 1, 0, 0) - PGSIZE;
     else if((*pte & PTE_P) != 0){
@@ -271,10 +277,12 @@ deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
       if(pa == 0)
         panic("kfree");
       char *v = P2V(pa);
+      cprintf("FREEING UVM page - %p | entry - %p | entry value - %p\n", v, pte, *pte);
       kfree(v);
       *pte = 0;
     }
   }
+  cprintf("*************************************************************************\n\n\n");
   return newsz;
 }
 
@@ -345,7 +353,7 @@ copyuvm(pde_t *pgdir, uint sz)
       goto bad;
     }
     // Increment ref count
-    inc_cow_ref((void *)P2V(pa));
+    inc_cow_ref((char*)P2V(pa));
     lcr3(V2P(pgdir));
     // No need to call lcr3 on d as that process has not been scheduled yet.
     // When it gets scheduled TLB will be flushed anyways.

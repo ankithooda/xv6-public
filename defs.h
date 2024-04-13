@@ -70,7 +70,9 @@ void            kfree(char*);
 void            kinit1(void*, void*);
 void            kinit2(void*, void*);
 int             isfree(int);
-void            inc_cow_ref(void*);
+uint            inc_cow_ref(char*);
+uint            dec_cow_ref(char*);
+uint            get_cow_ref(char*);
 // kbd.c
 void            kbdintr(void);
 
