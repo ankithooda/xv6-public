@@ -96,7 +96,7 @@ inc_cow_ref(char *pa) {
 
   *(kmem.cow_refbase + ref_index) = *(kmem.cow_refbase + ref_index) + 1;
   value = *(kmem.cow_refbase + ref_index);
-  //cprintf("INCREMENTING page - %p - %d\n", pa, *(kmem.cow_refbase + ref_index));
+  cprintf("INCREMENTING page - %p - %d\n", pa, *(kmem.cow_refbase + ref_index));
   if(kmem.use_lock)
     release(&kmem.lock);
   return value;
@@ -122,7 +122,7 @@ dec_cow_ref(char *pa) {
 
   *(kmem.cow_refbase + ref_index) = *(kmem.cow_refbase + ref_index) - 1;
   value = *(kmem.cow_refbase + ref_index);
-  //cprintf("DECREMENTING page - %p - %d\n", pa, *(kmem.cow_refbase + ref_index));
+  cprintf("DECREMENTING page - %p - %d\n", pa, *(kmem.cow_refbase + ref_index));
   if(kmem.use_lock)
     release(&kmem.lock);
   return value;
@@ -169,8 +169,6 @@ kfree(char *v)
   if((uint)v % PGSIZE || v < end || V2P(v) >= PHYSTOP)
     panic("kfree");
 
-  // Fill with junk to catch dangling refs.
-  memset(v, 1, PGSIZE);
 
   if(kmem.use_lock)
     acquire(&kmem.lock);
@@ -182,6 +180,8 @@ kfree(char *v)
 
   // Check if no process references this page.
   if (*(kmem.cow_refbase + ref_index) <= 0) {
+    // Fill with junk to catch dangling refs.
+    memset(v, 1, PGSIZE);
     //cprintf("ACTUALLY FREEING PAGE - %p\n", v);
     r = (struct run*)v;
     r->next = kmem.freelist;
