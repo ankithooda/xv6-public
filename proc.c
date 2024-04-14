@@ -196,7 +196,7 @@ fork(void)
   }
 
   // Copy process state from proc.
-  dumppgtab(curproc->pid);
+  //dumppgtab(curproc->pid);
   if((np->pgdir = copyuvm(curproc->pgdir, curproc->sz)) == 0){
     kfree(np->kstack);
     np->kstack = 0;
@@ -211,7 +211,7 @@ fork(void)
 
   // Clear %eax so that fork returns 0 in the child.
   np->tf->eax = 0;
-  dumppgtab(np->pid);
+  //dumppgtab(np->pid);
   for(i = 0; i < NOFILE; i++)
     if(curproc->ofile[i])
       np->ofile[i] = filedup(curproc->ofile[i]);

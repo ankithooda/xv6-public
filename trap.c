@@ -84,9 +84,10 @@ trap(struct trapframe *tf)
 
   //PAGEBREAK: 13
   default:
-    pde_t *faulting_entry;
-    faulting_entry = walkpgdir(myproc()->pgdir, (const void *)rcr2(), 0);
-    dumppgtab(myproc()->pid);
+    //pde_t *faulting_entry;
+    //faulting_entry = walkpgdir(myproc()->pgdir, (const void *)rcr2(), 0);
+    //dumppgtab(myproc()->pid);
+
     // myproc() is zero there is some problem in kernel
     // because init process is always running.
     if (myproc() == 0)
@@ -115,13 +116,14 @@ trap(struct trapframe *tf)
         goto kill_process;
 
   handle_cow:
-    pte_t *entry, *re_entry;
+    pte_t *entry;
+    //pte_t* re_entry;
     char *old_phys_page, *new_phys_page;
 
     entry = walkpgdir(myproc()->pgdir, (const void *)rcr2(), 0);
     old_phys_page = (char *)PTE_ADDR(*entry);
 
-    dumppgtab(myproc()->pid);
+    //dumppgtab(myproc()->pid);
 
     if (*entry&PTE_COW) {
       // COW ref count is 1, just set the page to writable.
@@ -140,7 +142,7 @@ trap(struct trapframe *tf)
           goto kill_process;
         }
         memmove(new_phys_page, P2V(old_phys_page), PGSIZE);
-        re_entry = walkpgdir(myproc()->pgdir, (void *)rcr2(), 0);
+        //re_entry = walkpgdir(myproc()->pgdir, (void *)rcr2(), 0);
         dec_cow_ref(P2V(old_phys_page));
       }
       lcr3(V2P(myproc()->pgdir));
@@ -162,7 +164,7 @@ trap(struct trapframe *tf)
       kfree(pa);
       goto kill_process;
     }
-    dumppgtab(myproc()->pid);
+    //dumppgtab(myproc()->pid);
     lcr3(V2P(myproc()->pgdir));
     break;
 
