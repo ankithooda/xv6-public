@@ -40,9 +40,9 @@ exec(char *path, char **argv)
   sz = 0;
 
   // Allocate guard page at 0 address and clear it's PTEs
-  if((sz = allocuvm(pgdir, sz, sz + 1*PGSIZE)) == 0)
-    goto bad;
-  clearpteu(pgdir, 0);
+  //if((sz = allocuvm(pgdir, sz, sz + 1*PGSIZE)) == 0)
+  //  goto bad;
+  //clearpteu(pgdir, 0);
 
   // Load program into kernel memory.
   for(i=0, off=elf.phoff; i<elf.phnum; i++, off+=sizeof(ph)){
@@ -102,7 +102,6 @@ exec(char *path, char **argv)
   oldpgdir = curproc->pgdir;
   curproc->pgdir = pgdir;
   curproc->sz = sz;
-  cprintf("ELF ENtry in exec %p\n", elf.entry);
   curproc->tf->eip = elf.entry;  // main
   curproc->tf->esp = sp;
   switchuvm(curproc);
