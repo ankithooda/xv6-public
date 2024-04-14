@@ -86,13 +86,6 @@ trap(struct trapframe *tf)
   default:
     pde_t *faulting_entry;
     faulting_entry = walkpgdir(myproc()->pgdir, (const void *)rcr2(), 0);
-    cprintf("Faulting process %p - %s - %d\n", myproc()->pgdir, myproc()->name, myproc()->pid);
-    cprintf("Faulting entry %p - %p\n", faulting_entry, *faulting_entry);
-
-    cprintf("pid %d %s: trap %d err %d on cpu %d "
-            "eip 0x%x addr 0x%x --kill proc\n",
-            myproc()->pid, myproc()->name, tf->trapno,
-            tf->err, cpuid(), tf->eip, rcr2());
     dumppgtab(myproc()->pid);
     // myproc() is zero there is some problem in kernel
     // because init process is always running.
@@ -128,18 +121,12 @@ trap(struct trapframe *tf)
     entry = walkpgdir(myproc()->pgdir, (const void *)rcr2(), 0);
     old_phys_page = (char *)PTE_ADDR(*entry);
 
-    cprintf("COW Write Access Request %s - %p - %p\n", myproc()->name, rcr2(), tf->eip);
-    cprintf("COW Flag - %p\n", *entry&PTE_COW);
-    cprintf("COW Page Entry - %p\n", *entry);
-    cprintf("COW Old Physical Page - %p\n", old_phys_page);
     dumppgtab(myproc()->pid);
 
     if (*entry&PTE_COW) {
       // COW ref count is 1, just set the page to writable.
       if (get_cow_ref((void*)P2V(old_phys_page)) == 1) {
-
         *entry = *entry | PTE_W ;
-        cprintf("COW - Setting the page - %p to be writable and non-cow - %p - %p\n", old_phys_page, entry, *entry);
       } else {
         new_phys_page = kalloc();
         if (new_phys_page == 0) {
@@ -152,15 +139,11 @@ trap(struct trapframe *tf)
           kfree(new_phys_page);
           goto kill_process;
         }
-        cprintf("Is memmove throwing trap\n");
-        cprintf("COW handling done new address - %p, old address - %p\n", new_phys_page, old_phys_page);
         memmove(new_phys_page, P2V(old_phys_page), PGSIZE);
         re_entry = walkpgdir(myproc()->pgdir, (void *)rcr2(), 0);
         dec_cow_ref(P2V(old_phys_page));
-        cprintf("COW Handled - %p\n", *re_entry);
       }
       lcr3(V2P(myproc()->pgdir));
-      cprintf("TLB FLushed\n");
       break;
     }
     else {
@@ -169,13 +152,11 @@ trap(struct trapframe *tf)
 
   allocate_page:
     char *pa = kalloc();
-    cprintf("Lazy Mem %p\n", pa);
     if(pa == 0){
       cprintf("allocuvm out of memory\n");
       goto kill_process;
     }
     memset(pa, 0, PGSIZE);
-    cprintf("allocating va %p\n", PGROUNDDOWN(rcr2()));
     if(mappages(myproc()->pgdir, (char*)PGROUNDDOWN(rcr2()), PGSIZE, V2P(pa), PTE_W|PTE_U) < 0){
       cprintf("allocuvm out of memory (2)\n");
       kfree(pa);
@@ -186,15 +167,13 @@ trap(struct trapframe *tf)
     break;
 
   kill_process:
-    cprintf("KILL KILLL KILLL KILLLLLLL\n");
-    /*cprintf("pid %d %s: trap %d err %d on cpu %d "
+    cprintf("pid %d %s: trap %d err %d on cpu %d "
             "eip 0x%x addr 0x%x--kill proc\n",
             myproc()->pid, myproc()->name, tf->trapno,
-            tf->err, cpuid(), tf->eip, rcr2());*/
+            tf->err, cpuid(), tf->eip, rcr2());
     myproc()->killed = 1;
     break;
   kernel_panic:
-    cprintf("Kernel panic ho hi gya\n");
     cprintf("unexpected trap %d err %d from cpu %d eip %x (cr2=0x%x)\n",
               tf->trapno, tf->err, cpuid(), tf->eip, rcr2());
     panic("trap");

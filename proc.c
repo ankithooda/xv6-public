@@ -195,9 +195,7 @@ fork(void)
     return -1;
   }
 
-  //cprintf("FORKING PROCESS PGDIR %p\n", np->pgdir);
   // Copy process state from proc.
-  cprintf("FORKING %p - %p\n", curproc->pgdir, curproc->sz);
   dumppgtab(curproc->pid);
   if((np->pgdir = copyuvm(curproc->pgdir, curproc->sz)) == 0){
     kfree(np->kstack);
@@ -206,7 +204,6 @@ fork(void)
     return -1;
   }
 
-  cprintf("FORKED PROCESS PGDIR %p - %p\n", np->pgdir, np->pid);
   np->sz = curproc->sz;
   np->parent = curproc;
   np->tickets = curproc->tickets;
