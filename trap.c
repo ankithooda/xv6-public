@@ -136,7 +136,7 @@ trap(struct trapframe *tf)
 
     if (*entry&PTE_COW) {
       // COW ref count is 1, just set the page to writable.
-      if (get_cow_ref((void*)old_phys_page) == 1) {
+      if (get_cow_ref((void*)P2V(old_phys_page)) == 1) {
 
         *entry = *entry | PTE_W ;
         cprintf("COW - Setting the page - %p to be writable and non-cow - %p - %p\n", old_phys_page, entry, *entry);

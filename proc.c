@@ -205,7 +205,7 @@ fork(void)
     np->state = UNUSED;
     return -1;
   }
-  dumppgtab(np->pid);
+
   cprintf("FORKED PROCESS PGDIR %p - %p\n", np->pgdir, np->pid);
   np->sz = curproc->sz;
   np->parent = curproc;
@@ -214,7 +214,7 @@ fork(void)
 
   // Clear %eax so that fork returns 0 in the child.
   np->tf->eax = 0;
-
+  dumppgtab(np->pid);
   for(i = 0; i < NOFILE; i++)
     if(curproc->ofile[i])
       np->ofile[i] = filedup(curproc->ofile[i]);
@@ -645,7 +645,7 @@ void dumppgtab(int pid) {
 
       cprintf("%p ", PTE_ADDR(*p));
       cprintf("%d ", isfree(V2P(PTE_ADDR(*p))));
-      cprintf("%d \n", get_cow_ref((void*)PTE_ADDR(*p)));
+      cprintf("%d \n", get_cow_ref((void*)P2V(PTE_ADDR(*p))));
     }
     cprintf("END PAGE TABLE\n");
   }
