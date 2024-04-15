@@ -97,7 +97,7 @@ trap(struct trapframe *tf)
     // if pagefault with read/write error code on unmapped memory; allocate page
     // otherwise kernel panic
     else if ((tf->cs&3) == 0)
-      if (tf->trapno == T_PGFLT && (tf->err == 0 || tf->err == 2))
+      if (tf->trapno == T_PGFLT && (tf->err == 0 || tf->err == 2) && rcr2() <= myproc()->sz)
         goto allocate_page;
       else if (tf->trapno == T_PGFLT && tf->err == 3)
         goto handle_cow;
@@ -108,7 +108,7 @@ trap(struct trapframe *tf)
     // If pagefault with read/write error code on unmapped memory; allocate page
     // otherwise kill user process
     else
-      if (tf->trapno == T_PGFLT && (tf->err == 4 || tf->err == 6))
+      if (tf->trapno == T_PGFLT && (tf->err == 4 || tf->err == 6) && rcr2() <= myproc()->sz)
         goto allocate_page;
       else if (tf->trapno == T_PGFLT && tf->err == 7)
         goto handle_cow;

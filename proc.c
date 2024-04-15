@@ -648,7 +648,7 @@ void dumppgtab(int pid) {
   }
 }
 
-int getpte(int pid, int addr) {
+uint getpte(uint pid, uint addr) {
   // First we need to find the proc
   unsigned int selected = -1;
   pte_t *p;
@@ -660,7 +660,7 @@ int getpte(int pid, int addr) {
   }
   if (selected != -1) {
     p = walkpgdir(ptable.proc[selected].pgdir, (const void *)addr, 0);
-    return (int)*p;
+    return (uint)*p;
   } else {
     return 0;
   }

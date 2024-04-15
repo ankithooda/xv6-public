@@ -147,13 +147,13 @@ int sys_dumppagetable() {
   return 0;
 }
 
-int sys_getpagetableentry() {
+uint sys_getpagetableentry() {
   int pid, addr;
 
   if (argint(0, &pid) < 0 || argint(1, &addr) < 0) {
     return 0;
   } else {
-    return getpte(pid, addr);
+    return getpte((uint)pid, (uint)addr);
   }
 }
 

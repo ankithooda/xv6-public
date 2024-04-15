@@ -329,7 +329,8 @@ copyuvm(pde_t *pgdir, uint sz)
     return 0;
   for(i = 0; i < sz; i += PGSIZE){
     if((pte = walkpgdir(pgdir, (void *) i, 0)) == 0)
-      panic("copyuvm: pte should exist");
+      continue;
+    //panic("copyuvm: pte should exist");
     // Due to lazy alloc it is possible that parent
     // does not have all of it's memory allocated.
     // therefore we skip if parent page does not exist
