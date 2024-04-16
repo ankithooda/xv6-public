@@ -84,6 +84,10 @@ trap(struct trapframe *tf)
 
   //PAGEBREAK: 13
   default:
+    //cprintf("pid %d %s: trap %d err %d on cpu %d "
+    //        "eip 0x%x addr 0x%x\n",
+    //        myproc()->pid, myproc()->name, tf->trapno,
+    //        tf->err, cpuid(), tf->eip, rcr2());
     //pde_t *faulting_entry;
     //faulting_entry = walkpgdir(myproc()->pgdir, (const void *)rcr2(), 0);
     //dumppgtab(myproc()->pid);

@@ -215,6 +215,7 @@ kalloc(void)
 int isfree(int ppn) {
   uint addr = (uint)P2V(ppn * PGSIZE);
   struct run*t;
+
   t = kmem.freelist;
   while(t) {
     if (addr == (uint)t)

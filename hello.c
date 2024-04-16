@@ -6,24 +6,33 @@ int
 main(int argc, char *argv[])
 {
   int pid = getpid();
-  dumppagetable(1);
-  dumppagetable(2);
+  char *p = sbrk(0x500000);
+  printf(1, "Alloced more mem %p\n", p);
+
+  char *a;
+
+  for (int i = 0x402040; i <= 0x40A000; i++) {
+    a = (char*)i;
+    *a = 'X';
+  }
+
   dumppagetable(pid);
+
   int rc = fork();
+
   if (rc == 0) {
-    printf(1, "Parent Process\n");
-    wait();
-    dumppagetable(pid);
+    printf(1, "Child Print all tables\n");
+    dumppagetable(getpid());
+    dumppagetable(3);
     exit();
+
   } else if (rc < 0) {
     printf(1, "Forking Error \n");
     exit();
+
   } else {
-    printf(1, "Child Process\n");
-    dumppagetable(rc);
-    int *a = (int*)0x1800;
-    *a = 50;
-    printf(1, "Value - %d\n", *a);
+    wait();
+    dumppagetable(pid);
     exit();
   }
 }
