@@ -618,7 +618,7 @@ void dumppgtab(int pid) {
   }
   if (selected != -1) {
     cprintf("START PAGE TABLE pid (%d)\n", ptable.proc[selected].pid);
-    for (int i = 0; i <= ptable.proc[selected].sz; i=i+PGSIZE) {
+    for (int i = 0; i < ptable.proc[selected].sz; i=i+PGSIZE) {
       p = walkpgdir(ptable.proc[selected].pgdir, (const void *)i, 0);
 
       if (p == 0)
@@ -641,8 +641,8 @@ void dumppgtab(int pid) {
         cprintf("- ");
 
       cprintf("%p ", PTE_ADDR(*p));
-      cprintf("%d ", isfree(V2P(PTE_ADDR(*p))));
-      cprintf("%d \n", get_cow_ref((void*)P2V(PTE_ADDR(*p))));
+      cprintf("%d \n", isfree(V2P(PTE_ADDR(*p))));
+      //cprintf("%d \n", get_cow_ref((void*)P2V(PTE_ADDR(*p))));
     }
     cprintf("END PAGE TABLE\n");
   }

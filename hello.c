@@ -6,13 +6,14 @@ int
 main(int argc, char *argv[])
 {
   int pid = getpid();
+  dumppagetable(1);
+  dumppagetable(2);
   dumppagetable(pid);
-
   int rc = fork();
   if (rc == 0) {
     printf(1, "Parent Process\n");
-    dumppagetable(pid);
     wait();
+    dumppagetable(pid);
     exit();
   } else if (rc < 0) {
     printf(1, "Forking Error \n");

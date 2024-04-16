@@ -125,7 +125,7 @@ trap(struct trapframe *tf)
 
     //dumppgtab(myproc()->pid);
 
-    if (*entry&PTE_COW) {
+    if (*entry&PTE_COW && *entry&PTE_U) {
       // COW ref count is 1, just set the page to writable.
       if (get_cow_ref((void*)P2V(old_phys_page)) == 1) {
         *entry = *entry | PTE_W ;

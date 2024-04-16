@@ -327,6 +327,7 @@ copyuvm(pde_t *pgdir, uint sz)
 
   if((d = setupkvm()) == 0)
     return 0;
+  //cprintf("COPYUVM - %p - %p\n", pgdir, d);
   for(i = 0; i < sz; i += PGSIZE){
     if((pte = walkpgdir(pgdir, (void *) i, 0)) == 0)
       continue;
@@ -338,6 +339,7 @@ copyuvm(pde_t *pgdir, uint sz)
     if(!(*pte & PTE_P))
       continue;
       //panic("copyuvm: page not present");
+    //cprintf("BEFORE VA - %p - PA - %p - FLAGS - %p\n", i, PTE_ADDR(*pte), PTE_FLAGS(*pte));
     pa = PTE_ADDR(*pte);
     *pte &= ~PTE_W;            // Mark entry read only
     *pte |= PTE_COW;           // Mark entry as COW
@@ -350,6 +352,7 @@ copyuvm(pde_t *pgdir, uint sz)
       //kfree(mem);
       goto bad;
     }
+    //cprintf("AFTER VA - %p - PA - %p - FLAGS - %p\n", i, PTE_ADDR(*pte), PTE_FLAGS(*pte));
     // Increment ref count
     inc_cow_ref((char*)P2V(pa));
     lcr3(V2P(pgdir));
