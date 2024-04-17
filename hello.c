@@ -6,12 +6,12 @@ int
 main(int argc, char *argv[])
 {
   int pid = getpid();
-  char *p = sbrk(0x500000);
+  char *p = sbrk(40000);
   printf(1, "Alloced more mem %p\n", p);
 
   char *a;
 
-  for (int i = 0x402040; i <= 0x40A000; i++) {
+  for (int i = 20000; i <= 30000; i++) {
     a = (char*)i;
     *a = 'X';
   }
@@ -22,9 +22,27 @@ main(int argc, char *argv[])
 
   if (rc == 0) {
     printf(1, "Child Print all tables\n");
+
     dumppagetable(getpid());
     dumppagetable(3);
-    exit();
+
+    char *a;
+    for (int i = 28000; i <= 33000; i++) {
+      a = (char*)i;
+      *a = 'Z';
+    }
+    int gc = fork();
+    if (gc == 0) {
+      printf(1, "Printing grandchild \n");
+      dumppagetable(getpid());
+      exit();
+    } else if (gc < 0) {
+      printf(1, "Error in forking grandchild\n");
+    } else {
+      wait();
+      dumppagetable(getpid());
+      exit();
+    }
 
   } else if (rc < 0) {
     printf(1, "Forking Error \n");
