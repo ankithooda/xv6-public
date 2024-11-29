@@ -320,14 +320,11 @@ sys_open(void)
 
   if(argstr(0, &path) < 0 || argint(1, &omode) < 0)
     return -1;
+
   // trace count start
-  // cprintf("%s-%s-%d\n", tracefile, path, tracecount);
-
   if (strcmp(path, tracefile) == 0) {tracecount++;}
-
-  // cprintf("%s-%s-%d\n", tracefile, path, tracecount);
-
   // trace count end
+
   begin_op();
 
   if(omode & O_CREATE){

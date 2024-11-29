@@ -107,8 +107,11 @@ extern int sys_getreadcount(void);
 extern int sys_trace(void);
 extern int sys_gettracecount(void);
 extern int sys_alarm(void);
-extern int sys_settickets();
-extern int sys_getpinfo();
+extern int sys_settickets(void);
+extern int sys_getpinfo(void);
+extern int sys_dumppagetable(void);
+extern int sys_getpagetableentry(void);
+extern int sys_isphysicalpagefree(void);
 
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -138,6 +141,9 @@ static int (*syscalls[])(void) = {
 [SYS_alarm]   sys_alarm,
 [SYS_settickets] sys_settickets,
 [SYS_getpinfo] sys_getpinfo,
+[SYS_dumppagetable] sys_dumppagetable,
+[SYS_getpagetableentry] sys_getpagetableentry,
+[SYS_isphysicalpagefree] sys_isphysicalpagefree,
 };
 
 void

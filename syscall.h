@@ -26,3 +26,6 @@
 #define SYS_alarm 25
 #define SYS_settickets 26
 #define SYS_getpinfo 27
+#define SYS_dumppagetable 28
+#define SYS_getpagetableentry 29
+#define SYS_isphysicalpagefree 30

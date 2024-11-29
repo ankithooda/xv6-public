@@ -32,7 +32,7 @@ seginit(void)
 // Return the address of the PTE in page table pgdir
 // that corresponds to virtual address va.  If alloc!=0,
 // create any required page table pages.
-static pte_t *
+pte_t *
 walkpgdir(pde_t *pgdir, const void *va, int alloc)
 {
   pde_t *pde;
@@ -44,11 +44,13 @@ walkpgdir(pde_t *pgdir, const void *va, int alloc)
   } else {
     if(!alloc || (pgtab = (pte_t*)kalloc()) == 0)
       return 0;
+
     // Make sure all those PTE_P bits are zero.
     memset(pgtab, 0, PGSIZE);
     // The permissions here are overly generous, but they can
     // be further restricted by the permissions in the page table
     // entries, if necessary.
+    // TODO : Investigate this further
     *pde = V2P(pgtab) | PTE_P | PTE_W | PTE_U;
   }
   return &pgtab[PTX(va)];
@@ -57,7 +59,7 @@ walkpgdir(pde_t *pgdir, const void *va, int alloc)
 // Create PTEs for virtual addresses starting at va that refer to
 // physical addresses starting at pa. va and size might not
 // be page-aligned.
-static int
+int
 mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm)
 {
   char *a, *last;
@@ -123,6 +125,7 @@ setupkvm(void)
 
   if((pgdir = (pde_t*)kalloc()) == 0)
     return 0;
+
   memset(pgdir, 0, PGSIZE);
   if (P2V(PHYSTOP) > (void*)DEVSPACE)
     panic("PHYSTOP too high");
@@ -262,8 +265,10 @@ deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
     return oldsz;
 
   a = PGROUNDUP(newsz);
+
   for(; a  < oldsz; a += PGSIZE){
     pte = walkpgdir(pgdir, (char*)a, 0);
+
     if(!pte)
       a = PGADDR(PDX(a) + 1, 0, 0) - PGSIZE;
     else if((*pte & PTE_P) != 0){
@@ -308,6 +313,7 @@ clearpteu(pde_t *pgdir, char *uva)
   if(pte == 0)
     panic("clearpteu");
   *pte &= ~PTE_U;
+  *pte &= ~PTE_W;
 }
 
 // Given a parent process's page table, create a copy
@@ -318,24 +324,41 @@ copyuvm(pde_t *pgdir, uint sz)
   pde_t *d;
   pte_t *pte;
   uint pa, i, flags;
-  char *mem;
+  //char *mem;
 
   if((d = setupkvm()) == 0)
     return 0;
-  for(i = PGSIZE; i < sz; i += PGSIZE){
+  //cprintf("COPYUVM - %p - %p\n", pgdir, d);
+  for(i = 0; i < sz; i += PGSIZE){
     if((pte = walkpgdir(pgdir, (void *) i, 0)) == 0)
-      panic("copyuvm: pte should exist");
+      continue;
+    //panic("copyuvm: pte should exist");
+    // Due to lazy alloc it is possible that parent
+    // does not have all of it's memory allocated.
+    // therefore we skip if parent page does not exist
+    // instead of panic
     if(!(*pte & PTE_P))
-      panic("copyuvm: page not present");
+      continue;
+      //panic("copyuvm: page not present");
+    //cprintf("BEFORE VA - %p - PA - %p - FLAGS - %p\n", i, PTE_ADDR(*pte), PTE_FLAGS(*pte));
     pa = PTE_ADDR(*pte);
+    *pte &= ~PTE_W;            // Mark entry read only
+    *pte |= PTE_COW;           // Mark entry as COW
     flags = PTE_FLAGS(*pte);
-    if((mem = kalloc()) == 0)
-      goto bad;
-    memmove(mem, (char*)P2V(pa), PGSIZE);
-    if(mappages(d, (void*)i, PGSIZE, V2P(mem), flags) < 0) {
-      kfree(mem);
+
+    //if((mem = kalloc()) == 0)
+    //  goto bad;
+    //memmove(mem, (char*)P2V(pa), PGSIZE);
+    if(mappages(d, (void*)i, PGSIZE, pa, flags) < 0) {
+      //kfree(mem);
       goto bad;
     }
+    //cprintf("AFTER VA - %p - PA - %p - FLAGS - %p\n", i, PTE_ADDR(*pte), PTE_FLAGS(*pte));
+    // Increment ref count
+    inc_cow_ref((char*)P2V(pa));
+    lcr3(V2P(pgdir));
+    // No need to call lcr3 on d as that process has not been scheduled yet.
+    // When it gets scheduled TLB will be flushed anyways.
   }
   return d;
 

@@ -22,7 +22,8 @@ extern void forkret(void);
 extern void trapret(void);
 
 static void wakeup1(void *chan);
-
+pte_t * walkpgdir(pde_t *pgdir, const void *va, int alloc);
+void dumppgtab(int pid);
 void
 pinit(void)
 {
@@ -195,12 +196,14 @@ fork(void)
   }
 
   // Copy process state from proc.
+  //dumppgtab(curproc->pid);
   if((np->pgdir = copyuvm(curproc->pgdir, curproc->sz)) == 0){
     kfree(np->kstack);
     np->kstack = 0;
     np->state = UNUSED;
     return -1;
   }
+
   np->sz = curproc->sz;
   np->parent = curproc;
   np->tickets = curproc->tickets;
@@ -208,7 +211,7 @@ fork(void)
 
   // Clear %eax so that fork returns 0 in the child.
   np->tf->eax = 0;
-
+  //dumppgtab(np->pid);
   for(i = 0; i < NOFILE; i++)
     if(curproc->ofile[i])
       np->ofile[i] = filedup(curproc->ofile[i]);
@@ -582,8 +585,9 @@ procdump(void)
       state = states[p->state];
     else
       state = "???";
-    cprintf("%d %s %s", p->pid, state, p->name);
+
     if(p->state == SLEEPING){
+      cprintf("%d %s %s", p->pid, state, p->name);
       getcallerpcs((uint*)p->context->ebp+2, pc);
       for(i=0; i<10 && pc[i] != 0; i++)
         cprintf(" %p", pc[i]);
@@ -594,12 +598,70 @@ procdump(void)
 
 void copypinfo(struct pstat *dest)
 {
-  cprintf("Address in kernel %d\n", dest);
   for (int i = 0; i < NPROC; i++) {
     dest->inuse[i] = ptable.stat.inuse[i];
     dest->pid[i] = ptable.stat.pid[i];
     dest->tickets[i] = ptable.stat.tickets[i];
     dest->ticks[i] = ptable.stat.ticks[i];
   }
-  cprintf("Done.\n");
+}
+
+void dumppgtab(int pid) {
+  // First we need to find the proc
+  unsigned int selected = -1;
+  pde_t *p;
+  for (int i = 0; i < NPROC; i++) {
+    if (ptable.proc[i].pid == pid) {
+      selected = i;
+      break;
+    }
+  }
+  if (selected != -1) {
+    cprintf("START PAGE TABLE pid (%d)\n", ptable.proc[selected].pid);
+    for (int i = 0; i < ptable.proc[selected].sz; i=i+PGSIZE) {
+      p = walkpgdir(ptable.proc[selected].pgdir, (const void *)i, 1);
+
+      if (p == 0)
+        return;
+
+      cprintf("%p ", i);
+      if ((uint)*p&PTE_P)
+        cprintf("P ");
+      else
+        cprintf("- ");
+
+      if ((uint)*p&PTE_U)
+        cprintf("U ");
+      else
+        cprintf("- ");
+
+      if ((uint)*p&PTE_W)
+        cprintf("W ");
+      else
+        cprintf("- ");
+
+      cprintf("%p ", PTE_ADDR(*p));
+      cprintf("%d \n", isfree(V2P(PTE_ADDR(*p))));
+      //cprintf("%d \n", get_cow_ref((void*)P2V(PTE_ADDR(*p))));
+    }
+    cprintf("END PAGE TABLE\n");
+  }
+}
+
+uint getpte(uint pid, uint addr) {
+  // First we need to find the proc
+  unsigned int selected = -1;
+  pte_t *p;
+  for (int i = 0; i < NPROC; i++) {
+    if (ptable.proc[i].pid == pid) {
+      selected = i;
+      break;
+    }
+  }
+  if (selected != -1) {
+    p = walkpgdir(ptable.proc[selected].pgdir, (const void *)addr, 1);
+    return (uint)*p;
+  } else {
+    return 0;
+  }
 }

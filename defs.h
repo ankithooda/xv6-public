@@ -69,7 +69,10 @@ char*           kalloc(void);
 void            kfree(char*);
 void            kinit1(void*, void*);
 void            kinit2(void*, void*);
-
+int             isfree(int);
+uint            inc_cow_ref(char*);
+uint            dec_cow_ref(char*);
+uint            get_cow_ref(char*);
 // kbd.c
 void            kbdintr(void);
 
@@ -122,6 +125,8 @@ int             wait(void);
 void            wakeup(void*);
 void            yield(void);
 void            copypinfo(struct pstat*);
+void            dumppgtab(int pid);
+uint            getpte(uint pid, uint addr);
 
 // swtch.S
 void            swtch(struct context**, struct context*);

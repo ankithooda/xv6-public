@@ -51,8 +51,17 @@ sys_sbrk(void)
   if(argint(0, &n) < 0)
     return -1;
   addr = myproc()->sz;
-  if(growproc(n) < 0)
-    return -1;
+
+  // For negative arguments to sbrk (reducing process size)
+  // do it immediately.
+  // For positive arguments to sbrk (increasing process size)
+  // do it lazily and actually allocate memory in trap.c
+  if (n < 0) {
+    if(growproc(n) < 0)
+      return -1;
+  } else {
+      myproc()->sz = addr + n;
+  }
   return addr;
 }
 
@@ -126,4 +135,34 @@ int sys_getpinfo()
   }
   copypinfo(p);
   return 0;
+}
+
+int sys_dumppagetable() {
+  int pid;
+
+  if (argint(0, &pid) < 0)
+    dumppgtab(myproc()->pid);
+  else
+    dumppgtab(pid);
+  return 0;
+}
+
+uint sys_getpagetableentry() {
+  int pid, addr;
+
+  if (argint(0, &pid) < 0 || argint(1, &addr) < 0) {
+    return 0;
+  } else {
+    return getpte((uint)pid, (uint)addr);
+  }
+}
+
+int sys_isphysicalpagefree() {
+  int ppn;
+
+  if (argint(0, &ppn) < 0) {
+    return 0;
+  } else {
+    return isfree(ppn);
+  }
 }
