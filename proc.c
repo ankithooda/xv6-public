@@ -619,7 +619,7 @@ void dumppgtab(int pid) {
   if (selected != -1) {
     cprintf("START PAGE TABLE pid (%d)\n", ptable.proc[selected].pid);
     for (int i = 0; i < ptable.proc[selected].sz; i=i+PGSIZE) {
-      p = walkpgdir(ptable.proc[selected].pgdir, (const void *)i, 0);
+      p = walkpgdir(ptable.proc[selected].pgdir, (const void *)i, 1);
 
       if (p == 0)
         return;
@@ -659,7 +659,7 @@ uint getpte(uint pid, uint addr) {
     }
   }
   if (selected != -1) {
-    p = walkpgdir(ptable.proc[selected].pgdir, (const void *)addr, 0);
+    p = walkpgdir(ptable.proc[selected].pgdir, (const void *)addr, 1);
     return (uint)*p;
   } else {
     return 0;
