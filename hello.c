@@ -6,51 +6,19 @@ int
 main(int argc, char *argv[])
 {
   int pid = getpid();
-  char *p = sbrk(40000);
-  printf(1, "Alloced more mem %p\n", p);
+  dumppagetable(pid);
+  sbrk(0x500000);
 
-  char *a;
+  char *p = (char *)0x400000;
 
-  for (int i = 20000; i <= 30000; i++) {
-    a = (char*)i;
-    *a = 'X';
-  }
+  printf(1, "Allocating mem\n");
+  printf(1, "Pointer %x\n", (int)p);
+
+  p[0] = 'A';
+  p[1] = 'H';
+  p[2] = '\n';
 
   dumppagetable(pid);
+  exit();
 
-  int rc = fork();
-
-  if (rc == 0) {
-    printf(1, "Child Print all tables\n");
-
-    dumppagetable(getpid());
-    dumppagetable(3);
-
-    char *a;
-    for (int i = 28000; i <= 33000; i++) {
-      a = (char*)i;
-      *a = 'Z';
-    }
-    int gc = fork();
-    if (gc == 0) {
-      printf(1, "Printing grandchild \n");
-      dumppagetable(getpid());
-      exit();
-    } else if (gc < 0) {
-      printf(1, "Error in forking grandchild\n");
-    } else {
-      wait();
-      dumppagetable(getpid());
-      exit();
-    }
-
-  } else if (rc < 0) {
-    printf(1, "Forking Error \n");
-    exit();
-
-  } else {
-    wait();
-    dumppagetable(pid);
-    exit();
-  }
 }
