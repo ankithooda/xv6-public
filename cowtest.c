@@ -15,7 +15,7 @@ simpletest()
   uint64 phys_size = PHYSTOP - EXTMEM;
   int sz = (phys_size / 3) * 2;
 
-  printf(1, "Allocating %d mb bytes\n", sz / (1024 * 1024));
+  //printf(1, "Allocating %d mb bytes\n", sz / (1024 * 1024));
 
   printf(1, "simple: ");
 
