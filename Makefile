@@ -194,6 +194,7 @@ UPROGS=\
 	_ptetool\
 	_pp_suite\
 	_pp_test\
+        _cowtest\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)
